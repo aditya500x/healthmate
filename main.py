@@ -33,11 +33,12 @@ def get_db():
         conn.close()
 
 def create_db_table():
-    """Creates the users table if it doesn't exist."""
+    """Creates the users and doctors tables if they don't exist."""
     print(f"Checking/Creating database file: {DATABASE_FILE}")
     # FIX: Apply check_same_thread=False here too for initialization safety
     conn = sqlite3.connect(DATABASE_FILE, check_same_thread=False)
     try:
+        # 1. Users Table (Patients - Primary table for all registration data)
         conn.execute("""
             CREATE TABLE IF NOT EXISTS users (
                 id INTEGER PRIMARY KEY,
@@ -45,9 +46,24 @@ def create_db_table():
                 name TEXT NOT NULL,
                 email TEXT UNIQUE NOT NULL,
                 phone TEXT,
-                password TEXT NOT NULL
+                password TEXT NOT NULL,
+                role TEXT NOT NULL DEFAULT 'user' 
             )
         """)
+        
+        # 2. Doctors Table (Identical Schema as requested - currently unused for insertion)
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS doctors (
+                id INTEGER PRIMARY KEY,
+                uid INTEGER UNIQUE NOT NULL,
+                name TEXT NOT NULL,
+                email TEXT UNIQUE NOT NULL,
+                phone TEXT,
+                password TEXT NOT NULL,
+                role TEXT NOT NULL DEFAULT 'doctor'
+            )
+        """)
+        
         conn.commit()
     finally:
         conn.close()
@@ -81,7 +97,6 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # --- Utility Context for Templates ---
 
-# Updated: Changed default user_name from "Guest" to "Anonymous"
 def get_template_context(request: Request, user_name: str = "Anonymous"):
     """Returns the base context required by Jinja2 templates."""
     error = request.query_params.get("error")
@@ -106,22 +121,33 @@ async def login_user(
     db: sqlite3.Connection = Depends(get_db),
     email: str = Form(...),
     password: str = Form(...),
+    role: str = Form(...) # NEW: Capture the role submitted by the switch
 ):
-    """Handles user login form submission and checks credentials using secure hashing."""
+    """Handles user login form submission, checking email, password, and matching role."""
     
     cursor = db.execute(
-        "SELECT uid, password, name FROM users WHERE email = ?",
+        # Check email and password against the primary users table
+        "SELECT uid, password, name, role FROM users WHERE email = ?",
         (email,)
     )
     user = cursor.fetchone()
     
+    # 1. Check if user exists and password is correct
     if user and verify_password(password, user['password']):
-        print(f"User logged in: UID {user['uid']}")
-        # SUCCESS: Redirect with UID in query string to fetch name on dashboard
-        return RedirectResponse(f"/dashboard?uid={user['uid']}", status_code=status.HTTP_303_SEE_OTHER)
+        # 2. Check if the submitted role matches the role stored in the database
+        if user['role'] == role:
+            print(f"User logged in: UID {user['uid']}, Role: {user['role']}")
+            # SUCCESS: Redirect with UID
+            return RedirectResponse(f"/dashboard?uid={user['uid']}", status_code=status.HTTP_303_SEE_OTHER)
+        else:
+            # Role mismatch error (e.g., logging in as 'doctor' when registered as 'user')
+            error_message = f"Role mismatch. Please confirm you are logging in as a {user['role']}."
+            print(f"Login failed: Role mismatch for {email}. Stored role: {user['role']}, Submitted role: {role}")
     else:
+        # Invalid credentials error
         error_message = "Invalid email or password."
-        return RedirectResponse(f"/login?error={error_message}", status_code=status.HTTP_303_SEE_OTHER)
+
+    return RedirectResponse(f"/login?error={error_message}", status_code=status.HTTP_303_SEE_OTHER)
 
 
 @app.get("/signup", response_class=HTMLResponse, tags=["Views"])
@@ -146,6 +172,7 @@ async def signup_user(
         phone = data.get('phone')
         password = data.get('password')
         confirm_password = data.get('confirm_password')
+        role = data.get('role', 'user') 
 
     except Exception:
         return JSONResponse(
@@ -159,6 +186,10 @@ async def signup_user(
             {"message": "Passwords do not match."},
             status_code=status.HTTP_400_BAD_REQUEST
         )
+    
+    # Simple role validation
+    if role not in ['user', 'doctor']:
+        role = 'user'
 
     try:
         # 2. Hash the password securely
@@ -167,13 +198,14 @@ async def signup_user(
         # 3. Get the next UID
         next_uid = get_next_uid(db) 
         
+        # INSERT statement still points to the primary 'users' table
         db.execute(
-            "INSERT INTO users (uid, name, email, phone, password) VALUES (?, ?, ?, ?, ?)",
-            (next_uid, name, email, phone, password_hash)
+            "INSERT INTO users (uid, name, email, phone, password, role) VALUES (?, ?, ?, ?, ?, ?)",
+            (next_uid, name, email, phone, password_hash, role)
         )
         db.commit()
         
-        print(f"New user registered: UID {next_uid}, Email: {email}")
+        print(f"New user registered: UID {next_uid}, Email: {email}, Role: {role}")
         
         # 4. SUCCESS: Return JSON with UID for client-side redirection
         return JSONResponse(
@@ -209,6 +241,7 @@ async def read_dashboard(
     
     user_name = "Anonymous" # Default name is now Anonymous
     if uid:
+        # NOTE: Fetching from the primary 'users' table
         cursor = db.execute("SELECT name FROM users WHERE uid = ?", (uid,))
         user = cursor.fetchone()
         if user:

@@ -88,6 +88,43 @@
         body.light-mode input.focus\:border-hm-accent-blue:focus {
             border-color: #4A90E2 !important;
         }
+
+        /* Custom Toggle Switch CSS: Dark Mode (Default) */
+        .role-switch-container {
+            background-color: #1C2130; /* hm-card color */
+        }
+        .role-switch-container > span {
+            background-color: #4A90E2; /* Blue accent (User) */
+        }
+        .peer:checked ~ span {
+            background-color: #FF69B4; /* Pink accent (Doctor) */
+        }
+        
+        /* Custom Toggle Switch CSS: Light Mode Overrides */
+        body.light-mode .role-switch-container {
+            background-color: #E5E7EB; /* Light card color */
+        }
+        body.light-mode .role-switch-container > span {
+            background-color: #1F2937; /* Darker knob background (User) */
+        }
+        body.light-mode .peer:checked ~ span {
+            background-color: #4A90E2; /* Blue knob background (Doctor) */
+        }
+        body.light-mode .role-switch-container label {
+            color: #4B5563; /* Default text color for labels in light mode */
+        }
+        body.light-mode .role-switch-container .peer:checked ~ label:first-of-type {
+            color: #4B5563 !important; /* User label is inactive */
+        }
+        body.light-mode .role-switch-container .peer:checked ~ label:last-of-type {
+            color: #FFFFFF !important; /* Doctor label is active (white text on blue knob) */
+        }
+        body.light-mode .role-switch-container .peer:not(:checked) ~ label:first-of-type {
+            color: #FFFFFF !important; /* User label is active (white text on blue knob) */
+        }
+        body.light-mode .role-switch-container .peer:not(:checked) ~ label:last-of-type {
+            color: #4B5563 !important; /* Doctor label is inactive */
+        }
     </style>
     <script>
         tailwind.config = {
@@ -121,10 +158,8 @@
                 iconContainer.classList.toggle('text-gray-400', !isLightMode);
 
                 if (isLightMode) {
-                    // Moon icon (Dark UI) for Light Mode
                     iconContainer.innerHTML = `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>`;
                 } else {
-                    // Sun icon (Light UI) for Dark Mode
                     iconContainer.innerHTML = `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>`;
                 }
 
@@ -132,7 +167,7 @@
                 toggleButton.classList.toggle('hover:bg-gray-200', isLightMode);
             }
 
-            // 2. Auth Link Text Color (Log In / Sign Up)
+            // 2. Auth Link Text Color
             const authLink = document.getElementById('auth-link');
             if (authLink) {
                 authLink.classList.toggle('text-gray-800', isLightMode);
@@ -145,33 +180,34 @@
             if (savedTheme === 'light') {
                 document.body.classList.add('light-mode');
             }
-            // Ensure the correct state is set immediately
             updateUI(savedTheme === 'light');
         }
 
         window.onload = setInitialUI;
 
-        // --- NEW JAVASCRIPT FOR FETCH SUBMISSION ---
+        // --- JAVASCRIPT FOR FETCH SUBMISSION ---
 
         async function handleSignup(event) {
             event.preventDefault(); // Stop standard form submission
             const form = event.target;
             const statusMessage = document.getElementById('status-message');
             const submitButton = document.getElementById('signup-button');
+            const roleInput = document.getElementById('role-toggle');
 
-            // Clear previous messages
+            // Determine role based on switch state
+            const role = roleInput.checked ? 'doctor' : 'user';
+
             statusMessage.innerHTML = '';
 
-            // Simple data collection
             const data = {
                 name: form.name.value,
                 phone: form.phone.value,
                 email: form.email.value,
                 password: form.password.value,
                 confirm_password: form.confirm_password.value,
+                role: role, // Include role in data payload
             };
 
-            // Basic Client-side validation (Password Match Check)
             if (data.password !== data.confirm_password) {
                 statusMessage.innerHTML = `<div class="bg-red-500 text-white font-bold rounded-lg p-4 mb-4">Passwords do not match.</div>`;
                 return;
@@ -192,15 +228,12 @@
                 const result = await response.json();
 
                 if (response.ok) {
-                    // Success (201 Created)
                     statusMessage.innerHTML = `<div class="bg-green-500 text-white font-bold rounded-lg p-4 mb-4">${result.message}</div>`;
                     
-                    // Client-side redirection upon success
                     if (result.redirect_url) {
                         window.location.href = result.redirect_url;
                     }
                 } else {
-                    // Server Error (4xx, 5xx)
                     statusMessage.innerHTML = `<div class="bg-red-500 text-white font-bold rounded-lg p-4 mb-4">${result.message || 'An unknown error occurred.'}</div>`;
                 }
             } catch (error) {
@@ -236,7 +269,7 @@
     <!-- Signup Card Container -->
     <div class="w-full max-w-md p-8 bg-hm-card/50 rounded-2xl shadow-2xl border-2 border-gray-700 hover:border-4 hover:border-hm-accent-blue transition duration-300 relative z-10 backdrop-blur-lg">
         <div class="text-center mb-8">
-            <!-- Dynamic Status Message Container (Replaces Jinja error block) -->
+            <!-- Dynamic Status Message Container -->
             <div id="status-message">
                 {% if error %}
                 <div class="bg-red-500 text-white font-bold rounded-lg p-4 mb-4">
@@ -259,8 +292,27 @@
             <p class="text-sm text-gray-400 mt-1">Start your journey to smarter health management.</p>
         </div>
 
-        <!-- Form now uses onsubmit to trigger JavaScript function -->
+        <!-- Form uses JS submission -->
         <form onsubmit="handleSignup(event)" class="space-y-4">
+            
+            <!-- Role Selector (NEW PROMINENT DESIGN - Moved to top) -->
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-300 mb-2 text-center">I am registering as a:</label>
+                <div class="relative w-full h-12 rounded-lg role-switch-container border border-gray-700 cursor-pointer overflow-hidden shadow-inner flex">
+                    
+                    <!-- Hidden Checkbox for state management -->
+                    <input type="checkbox" id="role-toggle" class="sr-only peer" />
+                    
+                    <!-- Sliding Background (Knob effect - starts left, translates right when checked) -->
+                    <span class="absolute w-1/2 h-full rounded-md transition-transform duration-300 peer-checked:translate-x-full"></span>
+                    
+                    <!-- Text Overlays (Labels) -->
+                    <!-- Labels wrap the entire switch container for large click area -->
+                    <label for="role-toggle" class="w-1/2 flex items-center justify-center font-extrabold text-lg z-10 transition-colors duration-300 text-white peer-checked:text-gray-400 hover:bg-white/5">User</label>
+                    <label for="role-toggle" class="w-1/2 flex items-center justify-center font-extrabold text-lg z-10 transition-colors duration-300 text-gray-400 peer-checked:text-white hover:bg-white/5">Doctor</label>
+                </div>
+            </div>
+
             <!-- Full Name -->
             <div>
                 <label for="name" class="block text-sm font-medium text-gray-300 mb-1">Full Name</label>
