@@ -59,11 +59,12 @@ create_db_table()
 if not os.path.exists("static"):
     os.makedirs("static")
 
+# Configure templates directory
+templates = Jinja2Templates(directory="templates")
+
 # Mount the static directory to serve files like CSS/JS/images
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-# Configure templates directory
-templates = Jinja2Templates(directory="templates")
 
 # --- Authentication/User Mock Data (Used for demonstration) ---
 MOCK_USER = "Dr. Healthmate"
@@ -79,6 +80,7 @@ def get_template_context(request: Request):
 async def read_root(request: Request):
     """Landing page view (Login/Marketing)."""
     context = get_template_context(request)
+    # NOTE: This assumes an index.html file exists in the templates directory
     return templates.TemplateResponse("index.html", context)
 
 # --- USER AUTH ROUTES ---
@@ -119,9 +121,10 @@ async def login_user(
 
 
 @app.get("/signup", response_class=HTMLResponse, tags=["Views"])
-async def read_signup(request: Request):
+async def read_signup(request: Request, error: str = None):
     """User registration page."""
     context = get_template_context(request)
+    context['error'] = error
     return templates.TemplateResponse("signup.html", context)
 
 @app.post("/signup")
@@ -132,15 +135,10 @@ async def signup_user(
     email: str = Form(...),
     phone: str = Form(...),
     password: str = Form(...),
-    confirm_password: str = Form(...) # Not saved, but required for frontend validation
+    confirm_password: str = Form(...)
 ):
     """Handles user signup form submission and saves user data to SQLite."""
     
-    if password != confirm_password:
-        # In a real app, render signup.html with an error message
-        print("Error: Passwords do not match.")
-        return RedirectResponse("/signup", status_code=status.HTTP_303_SEE_OTHER)
-
     try:
         # Hash the password using MD5
         password_hash = hashlib.md5(password.encode('utf-8')).hexdigest()
@@ -159,14 +157,11 @@ async def signup_user(
         # FIXED REDIRECTION: Redirect to dashboard on successful signup
         return RedirectResponse("/dashboard", status_code=status.HTTP_303_SEE_OTHER)
 
-    except sqlite3.IntegrityError as e:
-        # Handle cases like duplicate email
-        print(f"Registration Error: {e}")
-        # In a real app, render signup.html with a user-friendly error message
-        return RedirectResponse("/signup", status_code=status.HTTP_303_SEE_OTHER)
     except Exception as e:
         print(f"Unexpected error during signup: {e}")
-        return RedirectResponse("/signup", status_code=status.HTTP_303_SEE_OTHER)
+        context = get_template_context(request)
+        context['error'] = "An unexpected error occurred."
+        return templates.TemplateResponse("signup.html", context, status_code=500)
 
 
 # --- APPLICATION ROUTES (Require Authentication in a real app) ---
@@ -176,6 +171,12 @@ async def read_dashboard(request: Request):
     """Main application dashboard view (Service Selection)."""
     context = get_template_context(request)
     return templates.TemplateResponse("dashboard.html", context)
+
+@app.get("/prescription", response_class=HTMLResponse, tags=["Views"])
+async def read_prescription_analysis(request: Request):
+    """Prescription Analysis tool page."""
+    context = get_template_context(request)
+    return templates.TemplateResponse("prescription.html", context)
 
 @app.get("/learn", response_class=HTMLResponse, tags=["Views"])
 async def read_learn_more(request: Request):
