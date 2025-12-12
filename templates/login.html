@@ -176,6 +176,14 @@
     <!-- Login Card Container -->
     <div class="w-full max-w-sm p-8 bg-hm-card/50 rounded-2xl shadow-2xl border-2 border-gray-700 hover:border-4 hover:border-hm-accent-blue transition duration-300 relative z-10 backdrop-blur-lg">
         <div class="text-center mb-8">
+            
+            <!-- NEW: Error Message Display -->
+            {% if error %}
+            <div class="bg-red-500 text-white font-bold rounded-lg p-4 mb-4">
+                {{ error }}
+            </div>
+            {% endif %}
+
             <a href="/" class="text-3xl font-extrabold flex items-center justify-center space-x-2 mb-2">
                 <!-- LOGO ICON -->
                 <svg class="w-8 h-8" viewBox="0 0 500 500" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -207,7 +215,7 @@
             </div>
 
             <div class="flex justify-end">
-                <a href="#" class="text-xs text-gray-400 hover:text-hm-accent-pink transition duration-200">Forgot Password?</a>
+                <a href="/signup" class="text-xs text-gray-400 hover:text-hm-accent-pink transition duration-200">Forgot Password?</a>
             </div>
 
             <!-- Login Button -->

@@ -1,20 +1,31 @@
 from fastapi import FastAPI, Request, Form, Depends
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from starlette import status
 import uvicorn
 import os
 import sqlite3
-import hashlib
+import hashlib # Using standard hashlib for secure hashing (SHA-256)
 
 # --- Database Configuration ---
 DATABASE_FILE = "healthmate.db"
 STARTING_UID = 10000
 
+# --- Security Configuration (Using SHA-256) ---
+
+def get_password_hash(password: str) -> str:
+    """Hashes the password using SHA-256."""
+    return hashlib.sha256(password.encode('utf-8')).hexdigest()
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    """Verifies a plain password against a stored hash."""
+    return get_password_hash(plain_password) == hashed_password
+
 def get_db():
     """Dependency to get a database connection."""
-    conn = sqlite3.connect(DATABASE_FILE)
+    # FIX: check_same_thread=False is essential for SQLite in a multi-threaded web server
+    conn = sqlite3.connect(DATABASE_FILE, check_same_thread=False)
     conn.row_factory = sqlite3.Row  # Allows accessing columns by name
     try:
         yield conn
@@ -22,9 +33,10 @@ def get_db():
         conn.close()
 
 def create_db_table():
-    """Creates the users table if it doesn't exist, using a direct connection."""
+    """Creates the users table if it doesn't exist."""
     print(f"Checking/Creating database file: {DATABASE_FILE}")
-    conn = sqlite3.connect(DATABASE_FILE)
+    # FIX: Apply check_same_thread=False here too for initialization safety
+    conn = sqlite3.connect(DATABASE_FILE, check_same_thread=False)
     try:
         conn.execute("""
             CREATE TABLE IF NOT EXISTS users (
@@ -52,38 +64,36 @@ def get_next_uid(db: sqlite3.Connection) -> int:
 # --- FastAPI Initialization ---
 app = FastAPI(title="HealthMate AI")
 
-# FIX: Call create_db_table directly outside the generator dependency context
+# Initialize database
 create_db_table()
 
-# Create a dummy 'static' directory if it doesn't exist
+# Ensure directories exist
 if not os.path.exists("static"):
     os.makedirs("static")
+if not os.path.exists("templates"):
+    os.makedirs("templates")
 
 # Configure templates directory
 templates = Jinja2Templates(directory="templates")
 
-# Mount the static directory to serve files like CSS/JS/images
+# Mount the static directory
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
+# --- Utility Context for Templates ---
+MOCK_USER = "Dr. Healthmate" 
 
-# --- Authentication/User Mock Data (Used for demonstration) ---
-MOCK_USER = "Dr. Healthmate"
-
-# --- Utility Context for Templates (Inject common data into all templates) ---
 def get_template_context(request: Request):
     """Returns the base context required by Jinja2 templates."""
-    return {"request": request, "user_name": MOCK_USER}
+    error = request.query_params.get("error")
+    return {"request": request, "user_name": MOCK_USER, "error": error}
 
-# --- Routes ---
+# --- Core Routes ---
 
 @app.get("/", response_class=HTMLResponse, tags=["Views"])
 async def read_root(request: Request):
-    """Landing page view (Login/Marketing)."""
+    """Landing page view (index.html)."""
     context = get_template_context(request)
-    # NOTE: This assumes an index.html file exists in the templates directory
     return templates.TemplateResponse("index.html", context)
-
-# --- USER AUTH ROUTES ---
 
 @app.get("/login", response_class=HTMLResponse, tags=["Views"])
 async def read_login(request: Request):
@@ -97,53 +107,64 @@ async def login_user(
     email: str = Form(...),
     password: str = Form(...),
 ):
-    """Handles user login form submission and checks credentials."""
+    """Handles user login form submission and checks credentials using secure hashing."""
     
-    # Hash the submitted password using MD5
-    password_hash = hashlib.md5(password.encode('utf-8')).hexdigest()
-    
-    # Query the database for the user
     cursor = db.execute(
-        "SELECT uid FROM users WHERE email = ? AND password = ?",
-        (email, password_hash)
+        "SELECT uid, password, name FROM users WHERE email = ?",
+        (email,)
     )
     user = cursor.fetchone()
     
-    if user:
+    if user and verify_password(password, user['password']):
         print(f"User logged in: UID {user['uid']}")
-        # SUCCESS: In a real app, you would set a session or cookie here.
         return RedirectResponse("/dashboard", status_code=status.HTTP_303_SEE_OTHER)
     else:
-        # FAILURE
-        print(f"Login failed for email: {email}")
-        # Redirect back to login page (can add error message in a future iteration)
-        return RedirectResponse("/login", status_code=status.HTTP_303_SEE_OTHER)
+        error_message = "Invalid email or password."
+        return RedirectResponse(f"/login?error={error_message}", status_code=status.HTTP_303_SEE_OTHER)
 
 
 @app.get("/signup", response_class=HTMLResponse, tags=["Views"])
-async def read_signup(request: Request, error: str = None):
+async def read_signup(request: Request):
     """User registration page."""
     context = get_template_context(request)
-    context['error'] = error
     return templates.TemplateResponse("signup.html", context)
 
 @app.post("/signup")
 async def signup_user(
     request: Request,
     db: sqlite3.Connection = Depends(get_db),
-    name: str = Form(...),
-    email: str = Form(...),
-    phone: str = Form(...),
-    password: str = Form(...),
-    confirm_password: str = Form(...)
 ):
-    """Handles user signup form submission and saves user data to SQLite."""
+    """
+    Handles user signup via JSON submission (Fetch API).
+    Returns JSON response for client-side redirection.
+    """
     
     try:
-        # Hash the password using MD5
-        password_hash = hashlib.md5(password.encode('utf-8')).hexdigest()
+        data = await request.json()
+        name = data.get('name')
+        email = data.get('email')
+        phone = data.get('phone')
+        password = data.get('password')
+        confirm_password = data.get('confirm_password')
+
+    except Exception:
+        return JSONResponse(
+            {"message": "Invalid data format."},
+            status_code=status.HTTP_400_BAD_REQUEST
+        )
+
+    # 1. Check if passwords match
+    if password != confirm_password:
+        return JSONResponse(
+            {"message": "Passwords do not match."},
+            status_code=status.HTTP_400_BAD_REQUEST
+        )
+
+    try:
+        # 2. Hash the password securely
+        password_hash = get_password_hash(password)
         
-        # Get the next UID
+        # 3. Get the next UID
         next_uid = get_next_uid(db)
         
         db.execute(
@@ -154,21 +175,33 @@ async def signup_user(
         
         print(f"New user registered: UID {next_uid}, Email: {email}")
         
-        # FIXED REDIRECTION: Redirect to dashboard on successful signup
-        return RedirectResponse("/dashboard", status_code=status.HTTP_303_SEE_OTHER)
+        # 4. SUCCESS: Return JSON for client-side redirection
+        return JSONResponse(
+            {"message": "Registration successful. Redirecting...", "redirect_url": "/dashboard"},
+            status_code=status.HTTP_201_CREATED
+        )
+
+    except sqlite3.IntegrityError:
+        # Specific handling for UNIQUE constraint violation on email
+        return JSONResponse(
+            {"message": "This email is already registered. Please login instead."},
+            status_code=status.HTTP_409_CONFLICT
+        )
 
     except Exception as e:
-        print(f"Unexpected error during signup: {e}")
-        context = get_template_context(request)
-        context['error'] = "An unexpected error occurred."
-        return templates.TemplateResponse("signup.html", context, status_code=500)
+        # Generic error handling
+        print(f"!!! CRITICAL SERVER CRASH: {e}")
+        return JSONResponse(
+            {"message": "An unexpected server error occurred."},
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
 
 
-# --- APPLICATION ROUTES (Require Authentication in a real app) ---
+# --- APPLICATION ROUTES (Restored) ---
 
 @app.get("/dashboard", response_class=HTMLResponse, tags=["Views"])
 async def read_dashboard(request: Request):
-    """Main application dashboard view (Service Selection)."""
+    """The main application dashboard view."""
     context = get_template_context(request)
     return templates.TemplateResponse("dashboard.html", context)
 
@@ -204,13 +237,7 @@ async def read_learn_more(request: Request):
     return templates.TemplateResponse("learn.html", context)
 
 
-# If you run this file directly, it will start the Uvicorn server
 if __name__ == "__main__":
-    # Ensure the templates directory exists for local testing
     if not os.path.exists("templates"):
         os.makedirs("templates")
-        print("Created 'templates' directory. Please save HTML files there.")
-        
-    print("Starting HealthMate AI server on http://127.0.0.1:8000")
-    print("Visit http://127.0.0.1:8000/")
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

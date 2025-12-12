@@ -135,7 +135,6 @@
             // 2. Auth Link Text Color (Log In / Sign Up)
             const authLink = document.getElementById('auth-link');
             if (authLink) {
-                // The container text color needs to change from gray-500 (dark mode) to gray-800 (light mode)
                 authLink.classList.toggle('text-gray-800', isLightMode);
                 authLink.classList.toggle('text-gray-500', !isLightMode);
             }
@@ -151,6 +150,67 @@
         }
 
         window.onload = setInitialUI;
+
+        // --- NEW JAVASCRIPT FOR FETCH SUBMISSION ---
+
+        async function handleSignup(event) {
+            event.preventDefault(); // Stop standard form submission
+            const form = event.target;
+            const statusMessage = document.getElementById('status-message');
+            const submitButton = document.getElementById('signup-button');
+
+            // Clear previous messages
+            statusMessage.innerHTML = '';
+
+            // Simple data collection
+            const data = {
+                name: form.name.value,
+                phone: form.phone.value,
+                email: form.email.value,
+                password: form.password.value,
+                confirm_password: form.confirm_password.value,
+            };
+
+            // Basic Client-side validation (Password Match Check)
+            if (data.password !== data.confirm_password) {
+                statusMessage.innerHTML = `<div class="bg-red-500 text-white font-bold rounded-lg p-4 mb-4">Passwords do not match.</div>`;
+                return;
+            }
+
+            submitButton.disabled = true;
+            submitButton.innerHTML = 'Registering...';
+
+            try {
+                const response = await fetch('/signup', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data),
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    // Success (201 Created)
+                    statusMessage.innerHTML = `<div class="bg-green-500 text-white font-bold rounded-lg p-4 mb-4">${result.message}</div>`;
+                    
+                    // Client-side redirection upon success
+                    if (result.redirect_url) {
+                        window.location.href = result.redirect_url;
+                    }
+                } else {
+                    // Server Error (4xx, 5xx)
+                    statusMessage.innerHTML = `<div class="bg-red-500 text-white font-bold rounded-lg p-4 mb-4">${result.message || 'An unknown error occurred.'}</div>`;
+                }
+            } catch (error) {
+                console.error('Fetch error:', error);
+                statusMessage.innerHTML = `<div class="bg-red-500 text-white font-bold rounded-lg p-4 mb-4">Network error: Could not connect to server.</div>`;
+            } finally {
+                submitButton.disabled = false;
+                submitButton.innerHTML = 'Sign Up';
+            }
+        }
     </script>
 </head>
 <body class="bg-hm-bg min-h-screen text-white antialiased flex items-center justify-center p-4">
@@ -176,11 +236,15 @@
     <!-- Signup Card Container -->
     <div class="w-full max-w-md p-8 bg-hm-card/50 rounded-2xl shadow-2xl border-2 border-gray-700 hover:border-4 hover:border-hm-accent-blue transition duration-300 relative z-10 backdrop-blur-lg">
         <div class="text-center mb-8">
-            {% if error %}
-            <div class="bg-red-500 text-white font-bold rounded-lg p-4 mb-4">
-                {{ error }}
+            <!-- Dynamic Status Message Container (Replaces Jinja error block) -->
+            <div id="status-message">
+                {% if error %}
+                <div class="bg-red-500 text-white font-bold rounded-lg p-4 mb-4">
+                    {{ error }}
+                </div>
+                {% endif %}
             </div>
-            {% endif %}
+            
             <a href="/" class="text-3xl font-extrabold flex items-center justify-center space-x-2 mb-2">
                 <!-- LOGO ICON -->
                 <svg class="w-8 h-8" viewBox="0 0 500 500" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -195,45 +259,45 @@
             <p class="text-sm text-gray-400 mt-1">Start your journey to smarter health management.</p>
         </div>
 
-        <!-- FORM ACTION UPDATED TO POST /signup -->
-        <form action="/signup" method="POST" class="space-y-4">
+        <!-- Form now uses onsubmit to trigger JavaScript function -->
+        <form onsubmit="handleSignup(event)" class="space-y-4">
             <!-- Full Name -->
             <div>
                 <label for="name" class="block text-sm font-medium text-gray-300 mb-1">Full Name</label>
                 <input type="text" id="name" name="name" required
-                       class="w-full px-4 py-2 bg-gray-700/50 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-hm-accent-blue transition duration-200">
+                        class="w-full px-4 py-2 bg-gray-700/50 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-hm-accent-blue transition duration-200">
             </div>
             
             <!-- Phone Number -->
             <div>
                 <label for="phone" class="block text-sm font-medium text-gray-300 mb-1">Phone Number</label>
                 <input type="tel" id="phone" name="phone" required
-                       class="w-full px-4 py-2 bg-gray-700/50 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-hm-accent-blue transition duration-200">
+                        class="w-full px-4 py-2 bg-gray-700/50 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-hm-accent-blue transition duration-200">
             </div>
 
             <!-- Email Address -->
             <div>
                 <label for="email" class="block text-sm font-medium text-gray-300 mb-1">Email Address</label>
                 <input type="email" id="email" name="email" required
-                       class="w-full px-4 py-2 bg-gray-700/50 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-hm-accent-blue transition duration-200">
+                        class="w-full px-4 py-2 bg-gray-700/50 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-hm-accent-blue transition duration-200">
             </div>
 
             <!-- Password -->
             <div>
                 <label for="password" class="block text-sm font-medium text-gray-300 mb-1">Password</label>
                 <input type="password" id="password" name="password" required
-                       class="w-full px-4 py-2 bg-gray-700/50 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-hm-accent-blue transition duration-200">
+                        class="w-full px-4 py-2 bg-gray-700/50 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-hm-accent-blue transition duration-200">
             </div>
 
             <!-- Confirm Password -->
             <div>
                 <label for="confirm_password" class="block text-sm font-medium text-gray-300 mb-1">Confirm Password</label>
                 <input type="password" id="confirm_password" name="confirm_password" required
-                       class="w-full px-4 py-2 bg-gray-700/50 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-hm-accent-blue transition duration-200">
+                        class="w-full px-4 py-2 bg-gray-700/50 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-hm-accent-blue transition duration-200">
             </div>
 
             <!-- Sign Up Button -->
-            <button type="submit"
+            <button type="submit" id="signup-button"
                     class="w-full py-3 mt-6 text-base font-semibold rounded-lg bg-hm-accent-blue hover:bg-hm-accent-blue/80 transition duration-300 shadow-lg shadow-hm-accent-blue/40">
                 Sign Up
             </button>
