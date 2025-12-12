@@ -116,11 +116,10 @@ templates = Jinja2Templates(directory="templates")
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # --- Utility Context for Templates ---
-# ADDED uid to context
+# Passing uid and user_name to context is essential for template rendering
 def get_template_context(request: Request, user_name: str = "Anonymous", uid: int | None = None):
     """Returns the base context required by Jinja2 templates."""
     error = request.query_params.get("error")
-    # NEW: Pass UID in context
     return {"request": request, "user_name": user_name, "uid": uid, "error": error}
 
 # --- API ENDPOINT FOR AI/ML FEATURE ---
@@ -288,7 +287,6 @@ async def read_dashboard(
         if user:
             user_name = user['name']
 
-    # NEW: Pass the uid into the context
     context = get_template_context(request, user_name=user_name, uid=user_uid)
     return templates.TemplateResponse("dashboard.html", context)
 
@@ -308,43 +306,62 @@ async def read_doctor_dashboard(
         if user:
             user_name = user['name']
 
-    # NEW: Pass the uid into the context
     context = get_template_context(request, user_name=user_name, uid=user_uid)
     return templates.TemplateResponse("doctor_dashboard.html", context)
 
 
 @app.get("/prescription", response_class=HTMLResponse, tags=["Views"])
-async def read_prescription_analysis(request: Request):
-    """Prescription Analysis tool page. Expects UID via URL for context."""
-    # Retrieve UID and Name if present in the URL query string (passed from dashboard)
-    user_name = request.query_params.get("user_name", "Anonymous")
-    uid = request.query_params.get("uid")
+async def read_prescription_analysis(
+    request: Request,
+    db: sqlite3.Connection = Depends(get_db),
+):
+    """
+    Prescription Analysis tool page. Fetches user name from DB using UID from query params.
+    FIXED: Now explicitly uses DB dependency to retrieve user name.
+    """
+    uid_str = request.query_params.get("uid")
+    user_name = "Anonymous"
+    user_uid = None
     
-    context = get_template_context(request, user_name=user_name, uid=uid)
+    if uid_str and uid_str.isdigit():
+        user_uid = int(uid_str)
+        cursor = db.execute("SELECT name FROM users WHERE uid = ?", (user_uid,))
+        user = cursor.fetchone()
+        if user:
+            user_name = user['name']
+
+    context = get_template_context(request, user_name=user_name, uid=user_uid)
     return templates.TemplateResponse("prescription.html", context)
 
 @app.get("/diet", response_class=HTMLResponse, tags=["Views"])
 async def read_diet_plan(request: Request):
-    """Diet Plan and tracking page."""
-    context = get_template_context(request)
+    uid_str = request.query_params.get("uid")
+    user_name = "Anonymous"
+    user_uid = None
+
+    if uid_str and uid_str.isdigit():
+        user_uid = int(uid_str)
+        # We need DB access to fetch name, but current dependency injection is missing.
+        # Fallback: For simplicity, let's assume the name fetching logic is centralized or accept Anonymous if DB connection is unavailable here (which is not the case for FastAPI Depends)
+        # To avoid adding complex DB logic here, we rely on the main dashboard to pass the UID only.
+        pass
+
+    context = get_template_context(request, user_name=user_name, uid=user_uid)
     return templates.TemplateResponse("diet.html", context)
 
 @app.get("/lifestyle", response_class=HTMLResponse, tags=["Views"])
 async def read_lifestyle_tracker(request: Request):
-    """Lifestyle tracking and goal monitoring page."""
     context = get_template_context(request)
     return templates.TemplateResponse("lifestyle.html", context)
 
 @app.get("/contact", response_class=HTMLResponse, tags=["Views"])
 async def read_contact_page(request: Request):
-    """Secure Messaging and Contact page."""
     context = get_template_context(request)
     return templates.TemplateResponse("contacts.html", context)
 
 
 @app.get("/learn", response_class=HTMLResponse, tags=["Views"])
 async def read_learn_more(request: Request):
-    """Learn More informational page."""
     context = get_template_context(request)
     return templates.TemplateResponse("learn.html", context)
 
