@@ -207,15 +207,14 @@
                     </div>
                 </button>
 
-                <!-- Displaying the actual user name passed from the backend -->
                 <span id="welcome-text" class="text-sm text-gray-400 hidden sm:block">Welcome, {{ user_name }}</span>
-                
                 <button id="settings-icon" class="text-gray-400 hover:text-white transition duration-200 p-2 rounded-full hover:bg-gray-800">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37a1.724 1.724 0 002.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                 </button>
-                <button class="px-5 py-2.5 text-sm font-semibold rounded-full bg-green-500 hover:bg-green-600 transition duration-200 shadow-lg shadow-green-500/30">
+                <!-- UPDATED LINK to preserve UID -->
+                <a href="/prescription?uid={{ uid }}" class="px-5 py-2.5 text-sm font-semibold rounded-full bg-green-500 hover:bg-green-600 transition duration-200 shadow-lg shadow-green-500/30">
                     New Analysis
-                </button>
+                </a>
             </div>
         </div>
     </header>
@@ -230,7 +229,7 @@
                     <button class="p-4 rounded-full bg-hm-accent-blue/10 text-hm-accent-blue hover:bg-hm-accent-blue/30 transition duration-200">
                         <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
                     </button>
-                    <p id="upload-instruction-text" class="text-lg font-medium text-white">Drag and drop files here or <span class="text-hm-accent-pink hover:text-hm-accent-blue cursor-pointer">Browse Files</span></p>
+                    <p id="upload-instruction-text" class="text-lg font-medium text-white">Drag and drop files here or <a href="/prescription?uid={{ uid }}" class="text-hm-accent-pink hover:text-hm-accent-blue cursor-pointer">Browse Files</a></p>
                     <p class="text-sm text-gray-500">Supported formats: JPG, PNG, DICOM (Max 50MB)</p>
                 </div>
             </div>
@@ -245,7 +244,8 @@
             <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
 
                 <!-- Service Card 1: Prescription Analysis (NOW A LINK) -->
-                <a href="/prescription" class="group p-6 bg-hm-card/50 rounded-xl shadow-2xl border-2 border-gray-700 hover:border-4 hover:border-hm-accent-blue transition duration-300 h-full backdrop-blur-lg block">
+                <!-- UPDATED LINK to preserve UID -->
+                <a href="/prescription?uid={{ uid }}" class="group p-6 bg-hm-card/50 rounded-xl shadow-2xl border-2 border-gray-700 hover:border-4 hover:border-hm-accent-blue transition duration-300 h-full backdrop-blur-lg block">
                     <div class="p-3 mb-4 w-fit rounded-lg bg-purple-500/20 text-purple-400 transition duration-300 group-hover:scale-105">
                         <!-- Icon for Document/List -->
                         <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
@@ -256,7 +256,8 @@
                 </a>
 
                 <!-- Service Card 2: Diet (NOW A LINK) -->
-                <a href="/diet" class="group p-6 bg-hm-card/50 rounded-xl shadow-2xl border-2 border-gray-700 hover:border-4 hover:border-orange-500 transition duration-300 h-full backdrop-blur-lg block">
+                <!-- UPDATED LINK to preserve UID -->
+                <a href="/diet?uid={{ uid }}" class="group p-6 bg-hm-card/50 rounded-xl shadow-2xl border-2 border-gray-700 hover:border-4 hover:border-orange-500 transition duration-300 h-full backdrop-blur-lg block">
                     <div class="p-3 mb-4 w-fit rounded-lg bg-orange-500/20 text-orange-400 transition duration-300 group-hover:scale-105">
                         <!-- Icon for Food/Diet -->
                         <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-2.31 0l-6.195-2.065A2 2 0 009 11.144V7.5a2.5 2.5 0 00-5 0V14.5a2.5 2.5 0 005 0V11.144a2 2 0 001.928-1.784l6.195 2.065a2 2 0 002.31 0 2 2 0 000-3.464z"></path></svg>
@@ -267,7 +268,8 @@
                 </a>
                 
                 <!-- Service Card 3: Lifestyle (NOW A LINK) -->
-                <a href="/lifestyle" class="group p-6 bg-hm-card/50 rounded-xl shadow-2xl border-2 border-gray-700 hover:border-4 hover:border-indigo-500 transition duration-300 h-full backdrop-blur-lg block">
+                <!-- UPDATED LINK to preserve UID -->
+                <a href="/lifestyle?uid={{ uid }}" class="group p-6 bg-hm-card/50 rounded-xl shadow-2xl border-2 border-gray-700 hover:border-4 hover:border-indigo-500 transition duration-300 h-full backdrop-blur-lg block">
                     <div class="p-3 mb-4 w-fit rounded-lg bg-indigo-500/20 text-indigo-400 transition duration-300 group-hover:scale-105">
                         <!-- Icon for Lifestyle/Activity -->
                         <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002-2h2a2 2 0 002 2M11 7a2 2 0 002 2H9a2 2 0 002 2z"></path></svg>
@@ -278,7 +280,8 @@
                 </a>
 
                 <!-- Service Card 4: Contact (NOW A LINK) -->
-                <a href="/contact" class="group p-6 bg-hm-card/50 rounded-xl shadow-2xl border-2 border-gray-700 hover:border-4 hover:border-red-500 transition duration-300 h-full backdrop-blur-lg block">
+                <!-- UPDATED LINK to preserve UID -->
+                <a href="/contact?uid={{ uid }}" class="group p-6 bg-hm-card/50 rounded-xl shadow-2xl border-2 border-gray-700 hover:border-4 hover:border-red-500 transition duration-300 h-full backdrop-blur-lg block">
                     <div class="p-3 mb-4 w-fit rounded-lg bg-red-500/20 text-red-400 transition duration-300 group-hover:scale-105">
                         <!-- Icon for Contact/Phone -->
                         <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.5l1.5 3 2.25-2.25 1.75 1.75 3-1.5V19a2 2 0 01-2 2H5a2 2 0 01-2-2V5z"></path></svg>
