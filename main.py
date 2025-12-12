@@ -9,12 +9,10 @@ import os
 app = FastAPI(title="HealthMate AI")
 
 # Create a dummy 'static' directory if it doesn't exist (for serving static assets like images/CSS in a real deployment)
-# For this example, we'll mainly use the template and just set up the structure.
 if not os.path.exists("static"):
     os.makedirs("static")
 
 # Mount the static directory to serve files like CSS/JS/images
-# NOTE: We're using the Tailwind CDN, so we don't strictly need this, but it's good practice.
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # Configure templates directory
@@ -22,7 +20,6 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
 # --- Authentication/User Mock Data (Used for demonstration) ---
-# In a real app, you would fetch this from a database
 MOCK_USER = "Dr. Healthmate"
 
 # --- Utility Context for Templates (Inject common data into all templates) ---
@@ -44,6 +41,19 @@ async def read_dashboard(request: Request):
     context = get_template_context(request)
     return templates.TemplateResponse("dashboard.html", context)
 
+@app.get("/signup", response_class=HTMLResponse, tags=["Views"])
+async def read_signup(request: Request):
+    """User registration page."""
+    context = get_template_context(request)
+    return templates.TemplateResponse("signup.html", context)
+
+# Route for the Login Page
+@app.get("/login", response_class=HTMLResponse, tags=["Views"])
+async def read_login(request: Request):
+    """User login page."""
+    context = get_template_context(request)
+    return templates.TemplateResponse("login.html", context)
+
 
 # If you run this file directly, it will start the Uvicorn server
 if __name__ == "__main__":
@@ -53,5 +63,5 @@ if __name__ == "__main__":
         print("Created 'templates' directory. Please save HTML files there.")
         
     print("Starting HealthMate AI server on http://127.0.0.1:8000")
-    print("Visit http://127.0.0.1:8000/ and http://127.0.0.1:8000/dashboard")
+    print("Visit http://127.0.0.1:8000/, http://127.0.0.1:8000/dashboard, http://127.0.0.1:8000/signup, and http://127.0.0.1:8000/login")
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

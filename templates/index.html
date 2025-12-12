@@ -12,6 +12,38 @@
         body {
             font-family: 'Inter', sans-serif;
             background-color: #0A0D14; /* Deep, dark background */
+            overflow-x: hidden; /* Prevent horizontal scroll from background animation */
+        }
+        
+        /* Animated Background Container */
+        #animated-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            /* Ensure it sits behind everything */
+        }
+
+        /* Animation Keyframes for slow, gentle movement */
+        @keyframes move-bg {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            25% { transform: translate(10vw, -10vh) rotate(5deg); }
+            50% { transform: translate(0, 5vh) rotate(0deg); }
+            75% { transform: translate(-15vw, -5vh) rotate(-10deg); }
+            100% { transform: translate(0, 0) rotate(0deg); }
+        }
+
+        /* Styling for the animated color blobs */
+        .color-blob {
+            position: absolute;
+            width: 500px;
+            height: 500px;
+            border-radius: 50%;
+            opacity: 0.3; /* Subtle blend */
+            filter: blur(150px); /* Heavy blur for the 'jelly' effect */
+            animation: move-bg 15s infinite alternate; /* UPDATED: Changed from 30s to 15s for faster speed */
         }
     </style>
     <script>
@@ -31,9 +63,21 @@
 </head>
 <body class="bg-hm-bg min-h-screen text-white antialiased">
 
+    <!-- ANIMATED BLURRED BACKGROUND -->
+    <div id="animated-background">
+        <!-- Blue blob top left -->
+        <div class="color-blob bg-hm-accent-blue" style="top: -10%; left: -10%; animation-delay: 0s;"></div>
+        <!-- Pink blob center right -->
+        <div class="color-blob bg-hm-accent-pink" style="top: 30%; right: -15%; animation-delay: -10s;"></div>
+        <!-- Green blob bottom center -->
+        <div class="color-blob bg-green-500" style="bottom: -20%; left: 20%; animation-delay: -20s;"></div>
+    </div>
+    <!-- END ANIMATED BLURRED BACKGROUND -->
+
     <!-- Navigation Bar -->
-    <header class="p-4 md:p-6 border-b border-gray-800/50">
-        <div class="max-w-7xl mx-auto flex justify-between items-center">
+    <header class="p-4 md:p-6 border-b border-gray-800/50 relative z-20">
+        <!-- Full-width container for navigation -->
+        <div class="w-full px-4 md:px-6 flex justify-between items-center">
             <a href="/" class="text-2xl font-extrabold flex items-center space-x-2">
                 <svg class="w-6 h-6 text-hm-accent-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
                 <span class="text-white">Health</span><span class="text-hm-accent-pink">Mate</span>
@@ -42,19 +86,19 @@
                 <a href="/dashboard" class="text-gray-400 hover:text-white transition duration-200">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
                 </a>
-                <a href="#" class="px-5 py-2.5 text-sm font-medium rounded-full bg-transparent border border-gray-700 hover:border-white transition duration-200">
+                <a href="/login" class="px-5 py-2.5 text-sm font-medium rounded-full bg-transparent border border-gray-700 hover:border-white transition duration-200">
                     Log In
                 </a>
-                <button class="px-5 py-2.5 text-sm font-semibold rounded-full bg-hm-accent-blue hover:bg-hm-accent-blue/80 transition duration-200 shadow-lg shadow-hm-accent-blue/30">
+                <a href="/signup" class="px-5 py-2.5 text-sm font-semibold rounded-full bg-hm-accent-blue hover:bg-hm-accent-blue/80 transition duration-200 shadow-lg shadow-hm-accent-blue/30">
                     Get Started
-                </button>
+                </a>
             </div>
         </div>
     </header>
 
     <!-- Main Content Grid -->
-    <main class="max-w-7xl mx-auto p-4 md:p-10 mt-8">
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
+    <main class="w-full px-4 md:px-10 mt-8 relative z-20">
+        <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-10">
 
             <!-- Left Section (Marketing Copy) -->
             <div class="lg:col-span-2 space-y-8">
@@ -87,12 +131,12 @@
                 </div>
             </div>
 
-            <!-- Right Section (Activity Feed/Notifications) -->
+            <!-- Right Section (Activity Feed/Notifications) - Now using Glassmorphism -->
             <div class="lg:col-span-1 space-y-4">
                 <h2 class="text-xl font-bold mb-4 text-gray-300">Activity & Insights</h2>
 
                 <!-- Notification Card 1 -->
-                <div class="p-4 bg-hm-card rounded-xl shadow-xl border border-gray-800 hover:bg-hm-card/70 transition duration-200 cursor-pointer">
+                <div class="p-4 rounded-xl shadow-xl border border-gray-800 hover:bg-hm-card/70 transition duration-200 cursor-pointer backdrop-blur-lg bg-hm-card/50">
                     <div class="flex items-center space-x-3">
                         <div class="p-2 rounded-lg bg-hm-accent-blue/20 text-hm-accent-blue">
                             <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 2a1 1 0 00-1 1v1a1 1 0 002 0V3a1 1 0 00-1-1zM9 8a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1zm6.9 1a.999.999 0 00-.7-.27H14v-.77a.77.77 0 00-1.54 0v.77h-2.14a.77.77 0 000 1.54h2.14v.77a.77.77 0 001.54 0v-.77h1.2c.26 0 .5-.1.7-.27a.999.999 0 00.27-.7V9z" clip-rule="evenodd"></path></svg>
@@ -106,7 +150,7 @@
                 </div>
 
                 <!-- Notification Card 2 -->
-                <div class="p-4 bg-hm-card rounded-xl shadow-xl border border-gray-800 hover:bg-hm-card/70 transition duration-200 cursor-pointer">
+                <div class="p-4 rounded-xl shadow-xl border border-gray-800 hover:bg-hm-card/70 transition duration-200 cursor-pointer backdrop-blur-lg bg-hm-card/50">
                     <div class="flex items-center space-x-3">
                         <div class="p-2 rounded-lg bg-hm-accent-pink/20 text-hm-accent-pink">
                             <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg>
@@ -120,7 +164,7 @@
                 </div>
 
                 <!-- Notification Card 3 -->
-                <div class="p-4 bg-hm-card rounded-xl shadow-xl border border-gray-800 hover:bg-hm-card/70 transition duration-200 cursor-pointer">
+                <div class="p-4 rounded-xl shadow-xl border border-gray-800 hover:bg-hm-card/70 transition duration-200 cursor-pointer backdrop-blur-lg bg-hm-card/50">
                     <div class="flex items-center space-x-3">
                         <div class="p-2 rounded-lg bg-yellow-400/20 text-yellow-400">
                             <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 6a1 1 0 011-1h10a1 1 0 011 1v10a1 1 0 01-1 1H5a1 1 0 01-1-1V6z"></path></svg>
@@ -134,7 +178,7 @@
                 </div>
 
                 <!-- Notification Card 4 -->
-                <div class="p-4 bg-hm-card rounded-xl shadow-xl border border-gray-800 hover:bg-hm-card/70 transition duration-200 cursor-pointer">
+                <div class="p-4 rounded-xl shadow-xl border border-gray-800 hover:bg-hm-card/70 transition duration-200 cursor-pointer backdrop-blur-lg bg-hm-card/50">
                     <div class="flex items-center space-x-3">
                         <div class="p-2 rounded-lg bg-green-400/20 text-green-400">
                             <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path></svg>

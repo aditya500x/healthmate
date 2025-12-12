@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HealthMate | Log In</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Use Inter font -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0A0D14; /* Deep, dark background */
+            overflow-x: hidden; /* Prevent horizontal scroll from background animation */
+        }
+
+        /* Animated Background Container */
+        #animated-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+
+        /* Animation Keyframes for slow, gentle movement */
+        @keyframes move-bg {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            25% { transform: translate(10vw, -10vh) rotate(5deg); }
+            50% { transform: translate(0, 5vh) rotate(0deg); }
+            75% { transform: translate(-15vw, -5vh) rotate(-10deg); }
+            100% { transform: translate(0, 0) rotate(0deg); }
+        }
+
+        /* Styling for the animated color blobs */
+        .color-blob {
+            position: absolute;
+            width: 500px;
+            height: 500px;
+            border-radius: 50%;
+            opacity: 0.3; /* Subtle blend */
+            filter: blur(150px); /* Heavy blur for the 'jelly' effect */
+            animation: move-bg 15s infinite alternate; 
+        }
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'hm-bg': '#0A0D14',
+                        'hm-card': '#1C2130',
+                        'hm-accent-pink': '#FF69B4',
+                        'hm-accent-blue': '#4A90E2',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-hm-bg min-h-screen text-white antialiased flex items-center justify-center p-4">
+
+    <!-- ANIMATED BLURRED BACKGROUND (NEW) -->
+    <div id="animated-background">
+        <!-- Blue blob top left -->
+        <div class="color-blob bg-hm-accent-blue" style="top: -10%; left: -10%; animation-delay: 0s;"></div>
+        <!-- Pink blob center right -->
+        <div class="color-blob bg-hm-accent-pink" style="top: 30%; right: -15%; animation-delay: -10s;"></div>
+        <!-- Green blob bottom center -->
+        <div class="color-blob bg-green-500" style="bottom: -20%; left: 20%; animation-delay: -20s;"></div>
+    </div>
+    <!-- END ANIMATED BLURRED BACKGROUND -->
+
+    <!-- Login Card Container (UPDATED with Glassmorphism classes) -->
+    <div class="w-full max-w-sm p-8 bg-hm-card/50 rounded-2xl shadow-2xl border border-gray-800 backdrop-blur-lg relative z-10">
+        <div class="text-center mb-8">
+            <a href="/" class="text-3xl font-extrabold flex items-center justify-center space-x-2 mb-2">
+                <svg class="w-8 h-8 text-hm-accent-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
+                <span class="text-white">Health</span><span class="text-hm-accent-pink">Mate</span>
+            </a>
+            <h1 class="text-2xl font-bold text-gray-100">Welcome Back</h1>
+            <p class="text-sm text-gray-400 mt-1">Sign in to access your dashboard.</p>
+        </div>
+
+        <form action="/dashboard" method="POST" class="space-y-4">
+            <!-- Email Address -->
+            <div>
+                <label for="email" class="block text-sm font-medium text-gray-300 mb-1">Email Address</label>
+                <input type="email" id="email" name="email" required
+                       class="w-full px-4 py-2 bg-gray-700/50 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-hm-accent-blue transition duration-200">
+            </div>
+
+            <!-- Password -->
+            <div>
+                <label for="password" class="block text-sm font-medium text-gray-300 mb-1">Password</label>
+                <input type="password" id="password" name="password" required
+                       class="w-full px-4 py-2 bg-gray-700/50 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-hm-accent-blue transition duration-200">
+            </div>
+
+            <div class="flex justify-end">
+                <a href="#" class="text-xs text-gray-400 hover:text-hm-accent-pink transition duration-200">Forgot Password?</a>
+            </div>
+
+            <!-- Login Button -->
+            <button type="submit"
+                    class="w-full py-3 mt-6 text-base font-semibold rounded-lg bg-hm-accent-blue hover:bg-hm-accent-blue/80 transition duration-300 shadow-lg shadow-hm-accent-blue/40">
+                Log In
+            </button>
+        </form>
+
+        <p class="text-center text-sm text-gray-500 mt-6">
+            Need an account? <a href="/signup" class="text-hm-accent-pink hover:text-white font-medium transition duration-200">Sign Up</a>
+        </p>
+    </div>
+
+</body>
+</html>

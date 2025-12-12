@@ -12,6 +12,37 @@
         body {
             font-family: 'Inter', sans-serif;
             background-color: #0A0D14; /* Deep, dark background */
+            overflow-x: hidden; /* Prevent horizontal scroll from background animation */
+        }
+
+        /* Animated Background Container */
+        #animated-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+
+        /* Animation Keyframes for slow, gentle movement */
+        @keyframes move-bg {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            25% { transform: translate(10vw, -10vh) rotate(5deg); }
+            50% { transform: translate(0, 5vh) rotate(0deg); }
+            75% { transform: translate(-15vw, -5vh) rotate(-10deg); }
+            100% { transform: translate(0, 0) rotate(0deg); }
+        }
+
+        /* Styling for the animated color blobs */
+        .color-blob {
+            position: absolute;
+            width: 500px;
+            height: 500px;
+            border-radius: 50%;
+            opacity: 0.3; /* Subtle blend */
+            filter: blur(150px); /* Heavy blur for the 'jelly' effect */
+            animation: move-bg 15s infinite alternate; 
         }
     </style>
     <script>
@@ -31,9 +62,21 @@
 </head>
 <body class="bg-hm-bg min-h-screen text-white antialiased">
 
-    <!-- Navigation Bar -->
-    <header class="p-4 md:p-6 border-b border-gray-800/50">
-        <div class="max-w-7xl mx-auto flex justify-between items-center">
+    <!-- ANIMATED BLURRED BACKGROUND (NEW) -->
+    <div id="animated-background">
+        <!-- Blue blob top left -->
+        <div class="color-blob bg-hm-accent-blue" style="top: -10%; left: -10%; animation-delay: 0s;"></div>
+        <!-- Pink blob center right -->
+        <div class="color-blob bg-hm-accent-pink" style="top: 30%; right: -15%; animation-delay: -10s;"></div>
+        <!-- Green blob bottom center -->
+        <div class="color-blob bg-green-500" style="bottom: -20%; left: 20%; animation-delay: -20s;"></div>
+    </div>
+    <!-- END ANIMATED BLURRED BACKGROUND -->
+
+    <!-- Navigation Bar (Added backdrop-blur for glass effect) -->
+    <header class="p-4 md:p-6 border-b border-gray-800/50 backdrop-blur-md bg-hm-bg/80 sticky top-0 z-30">
+        <!-- Full-width container for navigation -->
+        <div class="w-full px-4 md:px-6 flex justify-between items-center">
             <a href="/" class="text-2xl font-extrabold flex items-center space-x-2">
                 <svg class="w-6 h-6 text-hm-accent-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
                 <span class="text-white">Health</span><span class="text-hm-accent-pink">Mate</span>
@@ -51,83 +94,69 @@
     </header>
 
     <!-- Main Dashboard Content -->
-    <main class="max-w-7xl mx-auto p-4 md:p-10 mt-8">
-        <h1 class="text-3xl font-bold mb-8 text-gray-100">AI Health Services</h1>
-        
-        <p class="text-gray-400 mb-8">Select a specialized diagnostic service to begin your analysis.</p>
+    <main class="w-full px-4 md:px-10 mt-8 relative z-10">
+        <div class="max-w-7xl mx-auto">
+            <h1 class="text-3xl font-bold mb-8 text-gray-100">Patient Management Tools</h1>
+            
+            <p class="text-gray-400 mb-8">Access essential health tracking and communication features.</p>
 
-        <!-- Service Grid -->
-        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            <!-- Service Grid (4 columns) -->
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
 
-            <!-- Service Card 1: MRI -->
-            <div class="group p-6 bg-hm-card rounded-xl shadow-2xl border border-gray-800 hover:border-hm-accent-blue transition duration-300 cursor-pointer h-full">
-                <div class="p-3 mb-4 w-fit rounded-lg bg-purple-500/20 text-purple-400 transition duration-300 group-hover:scale-105">
-                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002-2h2a2 2 0 002 2M11 7a2 2 0 002 2H9a2 2 0 002 2z"></path></svg>
+                <!-- Service Card 1: Prescription Analysis (UPDATED with Glassmorphism) -->
+                <div class="group p-6 bg-hm-card/50 rounded-xl shadow-2xl border border-gray-800 hover:border-hm-accent-blue transition duration-300 cursor-pointer h-full backdrop-blur-lg">
+                    <div class="p-3 mb-4 w-fit rounded-lg bg-purple-500/20 text-purple-400 transition duration-300 group-hover:scale-105">
+                        <!-- Icon for Document/List -->
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    </div>
+                    <h2 class="text-xl font-bold text-white mb-2">Prescription Analysis</h2>
+                    <p class="text-sm text-gray-400 mb-4">Reads the prescription given by the doctor and converts it into accessible text and insights.</p>
+                    <span class="text-hm-accent-blue text-sm font-medium hover:underline">View details &rarr;</span>
                 </div>
-                <h2 class="text-xl font-bold text-white mb-2">MRI Scan Analysis</h2>
-                <p class="text-sm text-gray-400 mb-4">3D scans for volumetric soft tissue analysis and detailed internal structure imaging.</p>
-                <span class="text-hm-accent-blue text-sm font-medium hover:underline">Click to select &rarr;</span>
-            </div>
 
-            <!-- Service Card 2: X-Ray -->
-            <div class="group p-6 bg-hm-card rounded-xl shadow-2xl border border-gray-800 hover:border-orange-500 transition duration-300 cursor-pointer h-full">
-                <div class="p-3 mb-4 w-fit rounded-lg bg-orange-500/20 text-orange-400 transition duration-300 group-hover:scale-105">
-                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                <!-- Service Card 2: Diet (UPDATED with Glassmorphism) -->
+                <div class="group p-6 bg-hm-card/50 rounded-xl shadow-2xl border border-gray-800 hover:border-orange-500 transition duration-300 cursor-pointer h-full backdrop-blur-lg">
+                    <div class="p-3 mb-4 w-fit rounded-lg bg-orange-500/20 text-orange-400 transition duration-300 group-hover:scale-105">
+                        <!-- Icon for Food/Diet -->
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-2.31 0l-6.195-2.065A2 2 0 009 11.144V7.5a2.5 2.5 0 00-5 0V14.5a2.5 2.5 0 005 0V11.144a2 2 0 001.928-1.784l6.195 2.065a2 2 0 002.31 0 2 2 0 000-3.464z"></path></svg>
+                    </div>
+                    <h2 class="text-xl font-bold text-white mb-2">Diet</h2>
+                    <p class="text-sm text-gray-400 mb-4">Displays and tracks your personalized diet cycle and provides meal recommendations.</p>
+                    <span class="text-orange-500 text-sm font-medium hover:underline">View plan &rarr;</span>
                 </div>
-                <h2 class="text-xl font-bold text-white mb-2">X-Ray Diagnostics</h2>
-                <p class="text-sm text-gray-400 mb-4">Bone fractures, chest screenings, and detection of foreign bodies.</p>
-                <span class="text-orange-500 text-sm font-medium hover:underline">Click to select &rarr;</span>
+                
+                <!-- Service Card 3: Lifestyle (UPDATED with Glassmorphism) -->
+                <div class="group p-6 bg-hm-card/50 rounded-xl shadow-2xl border border-gray-800 hover:border-indigo-500 transition duration-300 cursor-pointer h-full backdrop-blur-lg">
+                    <div class="p-3 mb-4 w-fit rounded-lg bg-indigo-500/20 text-indigo-400 transition duration-300 group-hover:scale-105">
+                        <!-- Icon for Lifestyle/Activity -->
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002-2h2a2 2 0 002 2M11 7a2 2 0 002 2H9a2 2 0 002 2z"></path></svg>
+                    </div>
+                    <h2 class="text-xl font-bold text-white mb-2">Lifestyle</h2>
+                    <p class="text-sm text-gray-400 mb-4">View and monitor lifestyle changes and goals prescribed by your doctor.</p>
+                    <span class="text-indigo-500 text-sm font-medium hover:underline">Track goals &rarr;</span>
+                </div>
+
+                <!-- Service Card 4: Contact (UPDATED with Glassmorphism) -->
+                <div class="group p-6 bg-hm-card/50 rounded-xl shadow-2xl border border-gray-800 hover:border-red-500 transition duration-300 cursor-pointer h-full backdrop-blur-lg">
+                    <div class="p-3 mb-4 w-fit rounded-lg bg-red-500/20 text-red-400 transition duration-300 group-hover:scale-105">
+                        <!-- Icon for Contact/Phone -->
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.5l1.5 3 2.25-2.25 1.75 1.75 3-1.5V19a2 2 0 01-2 2H5a2 2 0 01-2-2V5z"></path></svg>
+                    </div>
+                    <h2 class="text-xl font-bold text-white mb-2">Contact</h2>
+                    <p class="text-sm text-gray-400 mb-4">Securely message and schedule appointments with your designated healthcare provider.</p>
+                    <span class="text-red-500 text-sm font-medium hover:underline">Message doctor &rarr;</span>
+                </div>
             </div>
             
-            <!-- Service Card 3: CT Scan (2D) -->
-            <div class="group p-6 bg-hm-card rounded-xl shadow-2xl border border-gray-800 hover:border-indigo-500 transition duration-300 cursor-pointer h-full">
-                <div class="p-3 mb-4 w-fit rounded-lg bg-indigo-500/20 text-indigo-400 transition duration-300 group-hover:scale-105">
-                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7C4 4.79 7.582 3 12 3s8 1.79 8 4"></path></svg>
+            <!-- Upload Area Mockup (UPDATED with Glassmorphism) -->
+            <div class="mt-12 p-8 bg-hm-card/50 rounded-xl shadow-2xl border-2 border-dashed border-gray-700/50 hover:border-hm-accent-pink transition duration-300 backdrop-blur-lg">
+                <div class="flex flex-col items-center justify-center space-y-4">
+                    <button class="p-4 rounded-full bg-hm-accent-blue/10 text-hm-accent-blue hover:bg-hm-accent-blue/30 transition duration-200">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                    </button>
+                    <p class="text-lg font-medium text-white">Drag and drop files here or <span class="text-hm-accent-pink hover:text-hm-accent-blue cursor-pointer">Browse Files</span></p>
+                    <p class="text-sm text-gray-500">Supported formats: JPG, PNG, DICOM (Max 50MB)</p>
                 </div>
-                <h2 class="text-xl font-bold text-white mb-2">CT Scan (2D)</h2>
-                <p class="text-sm text-gray-400 mb-4">2D slices for cross-sectional anatomy and quick internal views.</p>
-                <span class="text-indigo-500 text-sm font-medium hover:underline">Click to select &rarr;</span>
-            </div>
-
-            <!-- Service Card 4: Detailed Bloodwork -->
-            <div class="group p-6 bg-hm-card rounded-xl shadow-2xl border border-gray-800 hover:border-red-500 transition duration-300 cursor-pointer h-full">
-                <div class="p-3 mb-4 w-fit rounded-lg bg-red-500/20 text-red-400 transition duration-300 group-hover:scale-105">
-                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
-                </div>
-                <h2 class="text-xl font-bold text-white mb-2">Bloodwork Analysis</h2>
-                <p class="text-sm text-gray-400 mb-4">In-depth analysis of lab results, hormone levels, and vitals.</p>
-                <span class="text-red-500 text-sm font-medium hover:underline">Click to select &rarr;</span>
-            </div>
-
-            <!-- Service Card 5: Genetic Screening -->
-            <div class="group p-6 bg-hm-card rounded-xl shadow-2xl border border-gray-800 hover:border-green-500 transition duration-300 cursor-pointer h-full">
-                <div class="p-3 mb-4 w-fit rounded-lg bg-green-500/20 text-green-400 transition duration-300 group-hover:scale-105">
-                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c1.657 0 3 .895 3 2s-1.343 2-3 2h-1a2 2 0 00-2 2v2M5 9.778c.84 4.09 3.006 6.678 5 9.222l1 1M18 9.778c-.84 4.09-3.006 6.678-5 9.222L12 21M4 15h4m4 0h4m-4 0v-4"></path></svg>
-                </div>
-                <h2 class="text-xl font-bold text-white mb-2">Genetic Screening</h2>
-                <p class="text-sm text-gray-400 mb-4">Risk assessment for hereditary conditions based on DNA data.</p>
-                <span class="text-green-500 text-sm font-medium hover:underline">Click to select &rarr;</span>
-            </div>
-            
-            <!-- Service Card 6: Health Tracker Sync -->
-            <div class="group p-6 bg-hm-card rounded-xl shadow-2xl border border-gray-800 hover:border-yellow-500 transition duration-300 cursor-pointer h-full">
-                <div class="p-3 mb-4 w-fit rounded-lg bg-yellow-500/20 text-yellow-400 transition duration-300 group-hover:scale-105">
-                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2-1.343-2-3-2zM9 15h6M9 18h6M4 21h16a2 2 0 002-2V5a2 2 0 00-2-2H4a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
-                </div>
-                <h2 class="text-xl font-bold text-white mb-2">Fitness Tracker Sync</h2>
-                <p class="text-sm text-gray-400 mb-4">Integrate data from smartwatches and fitness apps for holistic views.</p>
-                <span class="text-yellow-500 text-sm font-medium hover:underline">Click to select &rarr;</span>
-            </div>
-        </div>
-        
-        <!-- Upload Area Mockup -->
-        <div class="mt-12 p-8 bg-hm-card rounded-xl shadow-2xl border-2 border-dashed border-gray-700/50 hover:border-hm-accent-pink transition duration-300">
-            <div class="flex flex-col items-center justify-center space-y-4">
-                <button class="p-4 rounded-full bg-hm-accent-blue/10 text-hm-accent-blue hover:bg-hm-accent-blue/30 transition duration-200">
-                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
-                </button>
-                <p class="text-lg font-medium text-white">Drag and drop files here or <span class="text-hm-accent-pink hover:text-hm-accent-blue cursor-pointer">Browse Files</span></p>
-                <p class="text-sm text-gray-500">Supported formats: JPG, PNG, DICOM (Max 50MB)</p>
             </div>
         </div>
     </main>
