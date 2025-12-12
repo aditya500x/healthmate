@@ -165,7 +165,8 @@
                 if (response.ok) {
                     // Success
                     statusMessageDiv.innerHTML = '<div class="text-green-400 font-semibold">Analysis Complete! Review medications below.</div>';
-                    displayResults(result.medications);
+                    // Pass the entire result object to displayResults
+                    displayResults(result); 
                 } else {
                     // Failure (Server responded with 4xx or 5xx)
                     statusMessageDiv.innerHTML = `<div class="text-red-500 font-semibold">Error: ${result.message || 'Server failed to process the image.'}</div>`;
@@ -181,21 +182,77 @@
                 submitButton.disabled = false;
             }
         }
-
-        function displayResults(medications) {
+        
+        // --- UPDATED to accept and display full result dictionary ---
+        function displayResults(result) {
             const resultsDiv = document.getElementById('analysis-results-content');
-            let listHtml = '<h3 class="text-xl font-bold text-white mb-3">Identified Medications</h3><ul class="space-y-3">';
+            const medications = result.medications;
+            const interactions = result.interactions;
+            const rawTextSnippet = result.raw_text_snippet;
+            const accuracy = result.accuracy_score;
             
-            if (medications.length === 1 && medications[0].startsWith("Error:")) {
-                 // Display critical error from Python script clearly
-                 resultsDiv.innerHTML = `<div class="bg-red-900/30 border border-red-500 p-4 rounded-lg text-red-300 font-medium">${medications[0]}</div>`;
-            } else {
-                // Display list of extracted medications
-                medications.forEach(med => {
-                    listHtml += `<li class="p-3 bg-gray-800/50 rounded-lg text-gray-100 font-medium border border-gray-700 hover:border-purple-400 transition duration-200">${med}</li>`;
+            let htmlContent = '';
+            
+            // 1. Display Accuracy Score
+            const accuracyBox = document.getElementById('accuracy-box');
+            let accColor = 'bg-red-600';
+            if (accuracy > 75) { accColor = 'bg-green-600'; }
+            else if (accuracy > 50) { accColor = 'bg-yellow-600'; }
+            
+            accuracyBox.innerHTML = `
+                <span class="text-xs text-white font-medium">Accuracy</span>
+                <span class="text-xl font-extrabold text-white">${accuracy}%</span>
+            `;
+            accuracyBox.className = `w-24 h-16 p-2 rounded-lg flex flex-col items-center justify-center shadow-md ml-4 ${accColor}`;
+
+            // 2. Display Interaction Alerts
+            if (interactions.length > 0) {
+                htmlContent += `
+                    <div class="space-y-3 mb-6">
+                        <h3 class="text-xl font-bold text-red-500">Interaction Alerts (${interactions.length})</h3>
+                `;
+                interactions.forEach(warning => {
+                    htmlContent += `
+                        <div class="bg-red-900/30 border border-red-700 p-4 rounded-lg flex items-start space-x-3">
+                            <svg class="w-6 h-6 text-red-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.332 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                            <p class="text-sm text-red-300">${warning}</p>
+                        </div>
+                    `;
                 });
-                resultsDiv.innerHTML = listHtml + '</ul>';
+                htmlContent += `</div>`;
+            } else {
+                 htmlContent += `
+                    <div class="space-y-3 mb-6">
+                        <h3 class="text-xl font-bold text-green-500">Interaction Alerts (0)</h3>
+                        <div class="bg-green-900/30 border border-green-700 p-4 rounded-lg flex items-start space-x-3">
+                            <svg class="w-6 h-6 text-green-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            <p class="text-sm text-green-300">No known critical drug-drug interactions found based on extracted data.</p>
+                        </div>
+                    </div>`;
             }
+
+            // 3. Display Medications List
+            if (medications.length > 0 && !medications[0].startsWith("Could not extract")) {
+                let medListHtml = '';
+                medications.forEach(med => {
+                    medListHtml += `<li class="p-3 bg-gray-800/50 rounded-lg text-gray-100 font-medium border border-gray-700 hover:border-purple-400 transition duration-200">${med}</li>`;
+                });
+                htmlContent += `<h3 class="text-xl font-bold text-white mb-3">Identified Medications</h3><ul class="space-y-3">${medListHtml}</ul>`;
+            } else {
+                // If extraction failed or returned error message
+                htmlContent += `<h3 class="text-xl font-bold text-white mb-3">Identified Medications</h3>`;
+                htmlContent += `<div class="bg-yellow-900/30 border border-yellow-700 p-4 rounded-lg text-yellow-300 font-medium">${medications[0]}</div>`;
+            }
+            
+            // 4. Display Raw Text Snippet (for debugging/verification)
+            htmlContent += `
+                <div class="mt-8 pt-4 border-t border-gray-800">
+                    <h4 class="text-md font-semibold text-gray-500 mb-2">Raw OCR Snippet (Debugging)</h4>
+                    <p class="text-xs text-gray-600 whitespace-pre-wrap">${rawTextSnippet}</p>
+                </div>
+            `;
+            
+            resultsDiv.innerHTML = htmlContent;
         }
 
         function triggerAnalysis(event) {
@@ -362,7 +419,15 @@
                 <!-- Right Column: Results Display -->
                 <div class="lg:col-span-2">
                     <div class="p-8 bg-hm-card/50 rounded-xl shadow-2xl border-2 border-gray-700 h-full backdrop-blur-lg">
-                        <h2 class="text-2xl font-bold mb-6 text-white border-b border-gray-700 pb-2">Analysis Results</h2>
+                        
+                        <!-- Header with ACCURACY BOX -->
+                        <div class="flex justify-between items-center mb-6 border-b border-gray-700 pb-2">
+                            <h2 class="text-2xl font-bold text-white">Analysis Results</h2>
+                            <div id="accuracy-box" class="w-24 h-16 p-2 rounded-lg flex flex-col items-center justify-center shadow-md bg-gray-600">
+                                <span class="text-xs text-white font-medium">Accuracy</span>
+                                <span class="text-xl font-extrabold text-white">N/A</span>
+                            </div>
+                        </div>
 
                         <div id="analysis-results-content" class="space-y-4">
                              <!-- Initial guidance message -->

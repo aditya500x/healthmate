@@ -126,7 +126,10 @@ def get_template_context(request: Request, user_name: str = "Anonymous", uid: in
 
 @app.post("/api/analyze-prescription")
 async def analyze_prescription_endpoint(file: UploadFile = File(...)):
-    """Handles the file upload and runs the prescription analysis via the external module."""
+    """
+    Handles the file upload and runs the prescription analysis.
+    Returns medications, interactions, accuracy, and raw text snippet.
+    """
     
     file_location = f"uploads/{file.filename}"
     
@@ -135,18 +138,24 @@ async def analyze_prescription_endpoint(file: UploadFile = File(...)):
         with open(file_location, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
         
-        # 2. Run the external analysis function
-        medications = analyze_prescription_image(file_location)
+        # 2. Run the external analysis function (returns dictionary)
+        analysis_result = analyze_prescription_image(file_location)
         
-        # 3. Return successful JSON response
+        # 3. Return the full dictionary structure, ensuring all fields are present
         return JSONResponse(
-            {"message": "Analysis complete.", "medications": medications},
+            {
+                "message": "Analysis complete.", 
+                "medications": analysis_result.get("medications", []),
+                "interactions": analysis_result.get("interactions", []),
+                "raw_text_snippet": analysis_result.get("raw_text_snippet", "N/A"),
+                "accuracy_score": analysis_result.get("accuracy_score", 0.0)
+            },
             status_code=status.HTTP_200_OK
         )
     except Exception as e:
         print(f"Error processing prescription file: {e}")
         return JSONResponse(
-            {"message": f"Analysis failed: {e}"},
+            {"message": f"Analysis failed: {e}", "medications": [], "interactions": [], "accuracy_score": 0.0},
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
     finally:
@@ -317,7 +326,6 @@ async def read_prescription_analysis(
 ):
     """
     Prescription Analysis tool page. Fetches user name from DB using UID from query params.
-    FIXED: Now explicitly uses DB dependency to retrieve user name.
     """
     uid_str = request.query_params.get("uid")
     user_name = "Anonymous"
@@ -335,18 +343,7 @@ async def read_prescription_analysis(
 
 @app.get("/diet", response_class=HTMLResponse, tags=["Views"])
 async def read_diet_plan(request: Request):
-    uid_str = request.query_params.get("uid")
-    user_name = "Anonymous"
-    user_uid = None
-
-    if uid_str and uid_str.isdigit():
-        user_uid = int(uid_str)
-        # We need DB access to fetch name, but current dependency injection is missing.
-        # Fallback: For simplicity, let's assume the name fetching logic is centralized or accept Anonymous if DB connection is unavailable here (which is not the case for FastAPI Depends)
-        # To avoid adding complex DB logic here, we rely on the main dashboard to pass the UID only.
-        pass
-
-    context = get_template_context(request, user_name=user_name, uid=user_uid)
+    context = get_template_context(request)
     return templates.TemplateResponse("diet.html", context)
 
 @app.get("/lifestyle", response_class=HTMLResponse, tags=["Views"])
