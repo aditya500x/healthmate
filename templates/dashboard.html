@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HealthMate | Services Dashboard</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Use Inter font -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0A0D14; /* Deep, dark background */
+        }
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'hm-bg': '#0A0D14',
+                        'hm-card': '#1C2130',
+                        'hm-accent-pink': '#FF69B4',
+                        'hm-accent-blue': '#4A90E2',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-hm-bg min-h-screen text-white antialiased">
+
+    <!-- Navigation Bar -->
+    <header class="p-4 md:p-6 border-b border-gray-800/50">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <a href="/" class="text-2xl font-extrabold flex items-center space-x-2">
+                <svg class="w-6 h-6 text-hm-accent-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
+                <span class="text-white">Health</span><span class="text-hm-accent-pink">Mate</span>
+            </a>
+            <div class="flex items-center space-x-4">
+                <span class="text-sm text-gray-400 hidden sm:block">Welcome, {{"{{ user_name }}"}}</span>
+                <button class="text-gray-400 hover:text-white transition duration-200 p-2 rounded-full hover:bg-gray-800">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37a1.724 1.724 0 002.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                </button>
+                <button class="px-5 py-2.5 text-sm font-semibold rounded-full bg-green-500 hover:bg-green-600 transition duration-200 shadow-lg shadow-green-500/30">
+                    New Analysis
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Dashboard Content -->
+    <main class="max-w-7xl mx-auto p-4 md:p-10 mt-8">
+        <h1 class="text-3xl font-bold mb-8 text-gray-100">AI Health Services</h1>
+        
+        <p class="text-gray-400 mb-8">Select a specialized diagnostic service to begin your analysis.</p>
+
+        <!-- Service Grid -->
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+
+            <!-- Service Card 1: MRI -->
+            <div class="group p-6 bg-hm-card rounded-xl shadow-2xl border border-gray-800 hover:border-hm-accent-blue transition duration-300 cursor-pointer h-full">
+                <div class="p-3 mb-4 w-fit rounded-lg bg-purple-500/20 text-purple-400 transition duration-300 group-hover:scale-105">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002-2h2a2 2 0 002 2M11 7a2 2 0 002 2H9a2 2 0 002 2z"></path></svg>
+                </div>
+                <h2 class="text-xl font-bold text-white mb-2">MRI Scan Analysis</h2>
+                <p class="text-sm text-gray-400 mb-4">3D scans for volumetric soft tissue analysis and detailed internal structure imaging.</p>
+                <span class="text-hm-accent-blue text-sm font-medium hover:underline">Click to select &rarr;</span>
+            </div>
+
+            <!-- Service Card 2: X-Ray -->
+            <div class="group p-6 bg-hm-card rounded-xl shadow-2xl border border-gray-800 hover:border-orange-500 transition duration-300 cursor-pointer h-full">
+                <div class="p-3 mb-4 w-fit rounded-lg bg-orange-500/20 text-orange-400 transition duration-300 group-hover:scale-105">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                </div>
+                <h2 class="text-xl font-bold text-white mb-2">X-Ray Diagnostics</h2>
+                <p class="text-sm text-gray-400 mb-4">Bone fractures, chest screenings, and detection of foreign bodies.</p>
+                <span class="text-orange-500 text-sm font-medium hover:underline">Click to select &rarr;</span>
+            </div>
+            
+            <!-- Service Card 3: CT Scan (2D) -->
+            <div class="group p-6 bg-hm-card rounded-xl shadow-2xl border border-gray-800 hover:border-indigo-500 transition duration-300 cursor-pointer h-full">
+                <div class="p-3 mb-4 w-fit rounded-lg bg-indigo-500/20 text-indigo-400 transition duration-300 group-hover:scale-105">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7C4 4.79 7.582 3 12 3s8 1.79 8 4"></path></svg>
+                </div>
+                <h2 class="text-xl font-bold text-white mb-2">CT Scan (2D)</h2>
+                <p class="text-sm text-gray-400 mb-4">2D slices for cross-sectional anatomy and quick internal views.</p>
+                <span class="text-indigo-500 text-sm font-medium hover:underline">Click to select &rarr;</span>
+            </div>
+
+            <!-- Service Card 4: Detailed Bloodwork -->
+            <div class="group p-6 bg-hm-card rounded-xl shadow-2xl border border-gray-800 hover:border-red-500 transition duration-300 cursor-pointer h-full">
+                <div class="p-3 mb-4 w-fit rounded-lg bg-red-500/20 text-red-400 transition duration-300 group-hover:scale-105">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
+                </div>
+                <h2 class="text-xl font-bold text-white mb-2">Bloodwork Analysis</h2>
+                <p class="text-sm text-gray-400 mb-4">In-depth analysis of lab results, hormone levels, and vitals.</p>
+                <span class="text-red-500 text-sm font-medium hover:underline">Click to select &rarr;</span>
+            </div>
+
+            <!-- Service Card 5: Genetic Screening -->
+            <div class="group p-6 bg-hm-card rounded-xl shadow-2xl border border-gray-800 hover:border-green-500 transition duration-300 cursor-pointer h-full">
+                <div class="p-3 mb-4 w-fit rounded-lg bg-green-500/20 text-green-400 transition duration-300 group-hover:scale-105">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c1.657 0 3 .895 3 2s-1.343 2-3 2h-1a2 2 0 00-2 2v2M5 9.778c.84 4.09 3.006 6.678 5 9.222l1 1M18 9.778c-.84 4.09-3.006 6.678-5 9.222L12 21M4 15h4m4 0h4m-4 0v-4"></path></svg>
+                </div>
+                <h2 class="text-xl font-bold text-white mb-2">Genetic Screening</h2>
+                <p class="text-sm text-gray-400 mb-4">Risk assessment for hereditary conditions based on DNA data.</p>
+                <span class="text-green-500 text-sm font-medium hover:underline">Click to select &rarr;</span>
+            </div>
+            
+            <!-- Service Card 6: Health Tracker Sync -->
+            <div class="group p-6 bg-hm-card rounded-xl shadow-2xl border border-gray-800 hover:border-yellow-500 transition duration-300 cursor-pointer h-full">
+                <div class="p-3 mb-4 w-fit rounded-lg bg-yellow-500/20 text-yellow-400 transition duration-300 group-hover:scale-105">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2-1.343-2-3-2zM9 15h6M9 18h6M4 21h16a2 2 0 002-2V5a2 2 0 00-2-2H4a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                </div>
+                <h2 class="text-xl font-bold text-white mb-2">Fitness Tracker Sync</h2>
+                <p class="text-sm text-gray-400 mb-4">Integrate data from smartwatches and fitness apps for holistic views.</p>
+                <span class="text-yellow-500 text-sm font-medium hover:underline">Click to select &rarr;</span>
+            </div>
+        </div>
+        
+        <!-- Upload Area Mockup -->
+        <div class="mt-12 p-8 bg-hm-card rounded-xl shadow-2xl border-2 border-dashed border-gray-700/50 hover:border-hm-accent-pink transition duration-300">
+            <div class="flex flex-col items-center justify-center space-y-4">
+                <button class="p-4 rounded-full bg-hm-accent-blue/10 text-hm-accent-blue hover:bg-hm-accent-blue/30 transition duration-200">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                </button>
+                <p class="text-lg font-medium text-white">Drag and drop files here or <span class="text-hm-accent-pink hover:text-hm-accent-blue cursor-pointer">Browse Files</span></p>
+                <p class="text-sm text-gray-500">Supported formats: JPG, PNG, DICOM (Max 50MB)</p>
+            </div>
+        </div>
+    </main>
+
+</body>
+</html>
