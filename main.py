@@ -184,6 +184,13 @@ async def read_diet_plan(request: Request):
     context = get_template_context(request)
     return templates.TemplateResponse("diet.html", context)
 
+@app.get("/contact", response_class=HTMLResponse, tags=["Views"])
+async def read_contact_page(request: Request):
+    """Secure Messaging and Contact page."""
+    context = get_template_context(request)
+    return templates.TemplateResponse("contacts.html", context)
+
+
 @app.get("/learn", response_class=HTMLResponse, tags=["Views"])
 async def read_learn_more(request: Request):
     """Learn More informational page."""
