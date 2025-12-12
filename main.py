@@ -178,6 +178,12 @@ async def read_prescription_analysis(request: Request):
     context = get_template_context(request)
     return templates.TemplateResponse("prescription.html", context)
 
+@app.get("/diet", response_class=HTMLResponse, tags=["Views"])
+async def read_diet_plan(request: Request):
+    """Diet Plan and tracking page."""
+    context = get_template_context(request)
+    return templates.TemplateResponse("diet.html", context)
+
 @app.get("/learn", response_class=HTMLResponse, tags=["Views"])
 async def read_learn_more(request: Request):
     """Learn More informational page."""
