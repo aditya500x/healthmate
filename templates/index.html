@@ -13,6 +13,7 @@
             font-family: 'Inter', sans-serif;
             background-color: #0A0D14; /* Deep, dark background */
             overflow-x: hidden; /* Prevent horizontal scroll from background animation */
+            transition: background-color 0.3s ease;
         }
 
         /* Animated Background Container */
@@ -44,6 +45,53 @@
             filter: blur(150px); /* Heavy blur for the 'jelly' effect */
             animation: move-bg 15s infinite alternate; 
         }
+
+        /* --- LIGHT MODE OVERRIDES --- */
+        body.light-mode {
+            background-color: #F4F6F9; /* Light BG */
+            color: #1F2937; /* Dark text (Base) */
+        }
+
+        /* Text Overrides */
+        body.light-mode .text-white, 
+        body.light-mode .text-gray-100,
+        /* FIX: Targeting the text-gray-300 used for headings and secondary text */
+        body.light-mode .text-gray-300 { 
+            color: #1F2937 !important;
+        }
+        body.light-mode .text-gray-400,
+        body.light-mode .text-gray-500 {
+            color: #6B7280 !important;
+        }
+        
+        /* Navigation and Cards (Glassmorphism effect) */
+        body.light-mode header {
+            background-color: rgba(255, 255, 255, 0.9);
+            border-bottom-color: #E5E7EB !important;
+        }
+        
+        body.light-mode .backdrop-blur-lg,
+        body.light-mode .bg-hm-card\/50 {
+            background-color: rgba(255, 255, 255, 0.7);
+        }
+        
+        /* Border Overrides */
+        body.light-mode .border-gray-700 {
+            border-color: #A1A1AA !important; /* light-mode default border (gray-400/500 equivalent) */
+        }
+        
+        /* Hover Border Overrides */
+        body.light-mode .hover\:border-4:hover {
+            border-color: #1F2937 !important; /* Darker border on hover in light mode */
+        }
+        
+        /* Maintain colored hover borders in light mode for the accent colors */
+        body.light-mode .hover\:border-hm-accent-blue:hover { border-color: #4A90E2 !important; }
+        body.light-mode .hover\:border-hm-accent-pink:hover { border-color: #FF69B4 !important; }
+        body.light-mode .hover\:border-yellow-500:hover { border-color: #FBBF24 !important; }
+        body.light-mode .hover\:border-green-500:hover { border-color: #10B981 !important; }
+
+
     </style>
     <script>
         tailwind.config = {
@@ -58,6 +106,71 @@
                 }
             }
         }
+
+        function toggleTheme() {
+            const body = document.body;
+            body.classList.toggle('light-mode');
+            const isLightMode = body.classList.contains('light-mode');
+            localStorage.setItem('theme', isLightMode ? 'light' : 'dark');
+            updateUI(isLightMode);
+        }
+
+        function updateUI(isLightMode) {
+            // 1. Theme Toggle Icon and Button Hover
+            const iconContainer = document.getElementById('theme-toggle-icon');
+            const toggleButton = document.getElementById('theme-toggle-button');
+            
+            if (iconContainer && toggleButton) {
+                // Update Icon & Text color
+                iconContainer.classList.toggle('text-gray-800', isLightMode);
+                iconContainer.classList.toggle('text-gray-400', !isLightMode);
+
+                // Update Icon Shape (Moon for Light Mode, Sun for Dark Mode)
+                if (isLightMode) {
+                    iconContainer.innerHTML = `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>`;
+                } else {
+                    iconContainer.innerHTML = `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>`;
+                }
+
+                // FIX: Manually toggle hover classes on the button element
+                toggleButton.classList.toggle('hover:bg-gray-700', !isLightMode);
+                toggleButton.classList.toggle('hover:bg-gray-200', isLightMode);
+            }
+            
+            // 2. Navigation Link Overrides (Log In button)
+            const loginButton = document.getElementById('login-link');
+            if (loginButton) {
+                // FIX: Manually toggle border and text colors for the "Log In" link
+                // Default: Dark Mode (border-gray-700, hover:border-white)
+                // Light Mode: (border-gray-400 equivalent for visibility, hover:border-gray-800 for contrast)
+                loginButton.classList.toggle('border-gray-700', !isLightMode); // Original class
+                loginButton.classList.toggle('border-gray-400', isLightMode);  // Light mode default border
+                loginButton.classList.toggle('text-gray-400', isLightMode);
+                loginButton.classList.toggle('hover:border-white', !isLightMode);
+                loginButton.classList.toggle('hover:border-gray-800', isLightMode); // Dark hover border
+                loginButton.classList.toggle('text-gray-800', isLightMode);
+            }
+
+            // 3. Update Dashboard link color for light mode
+            const dashboardLink = document.querySelector('a[href="/dashboard"]');
+            if (dashboardLink) {
+                dashboardLink.classList.toggle('text-gray-800', isLightMode);
+                dashboardLink.classList.toggle('hover:text-gray-900', isLightMode);
+                dashboardLink.classList.toggle('hover:text-white', !isLightMode);
+            }
+        }
+        
+        function setInitialUI() {
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            if (savedTheme === 'light') {
+                document.body.classList.add('light-mode');
+            }
+            // Ensure the correct state is set immediately
+            updateUI(savedTheme === 'light');
+        }
+
+        window.onload = setInitialUI;
+
     </script>
 </head>
 <body class="bg-hm-bg min-h-screen text-white antialiased">
@@ -78,14 +191,35 @@
         <!-- Full-width container for navigation -->
         <div class="w-full px-4 md:px-6 flex justify-between items-center">
             <a href="/" class="text-2xl font-extrabold flex items-center space-x-2">
-                <svg class="w-6 h-6 text-hm-accent-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
+                <!-- LOGO ICON -->
+                <svg class="w-6 h-6" viewBox="0 0 500 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="150" y="0" width="200" height="200" rx="40" fill="#4A90E2"/>
+                    <rect x="300" y="150" width="200" height="200" rx="40" fill="#FF69B4"/>
+                    <rect x="0" y="150" width="200" height="200" rx="40" fill="#4A90E2"/>
+                    <rect x="150" y="300" width="200" height="200" rx="40" fill="#10B981"/>
+                </svg>
                 <span class="text-white">Health</span><span class="text-hm-accent-pink">Mate</span>
             </a>
             <div class="flex items-center space-x-4">
-                <a href="/dashboard" class="text-gray-400 hover:text-white transition duration-200">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                
+                <!-- THEME TOGGLE BUTTON -->
+                <button id="theme-toggle-button" onclick="toggleTheme()" class="p-2 rounded-full transition duration-300">
+                    <div id="theme-toggle-icon" class="text-gray-400">
+                        <!-- Initial icon set by JS in setInitialUI() -->
+                    </div>
+                </button>
+                
+                <!-- INCOGNITO ICON (Replaced old lightning bolt) -->
+                <a href="/dashboard" class="text-gray-400 hover:text-white transition duration-200 p-2 -m-2">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path fill="currentColor" stroke="none" d="M12 11a4 4 0 100-8 4 4 0 000 8zm-2 9a2 2 0 01-2-2v-2h8v2a2 2 0 01-2 2h-4z"/>
+                        <path fill="currentColor" stroke="none" d="M12 11c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4zm-4 7v-2h8v2a2 2 0 01-2 2h-4a2 2 0 01-2-2z" opacity="0"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 15c0 1.66-3.13 3-7 3s-7-1.34-7-3V9c0-1.66 3.13-3 7-3s7 1.34 7 3v6zM4.75 14.5c.78 1.4 3.2 2.5 7.25 2.5s6.47-1.1 7.25-2.5m-14.5 0h14.5"/>
+                    </svg>
                 </a>
-                <a href="/login" class="px-5 py-2.5 text-sm font-medium rounded-full bg-transparent border border-gray-700 hover:border-white transition duration-200">
+                
+                <!-- LOG IN LINK - Added ID for JS targeting -->
+                <a href="/login" id="login-link" class="px-5 py-2.5 text-sm font-medium rounded-full bg-transparent border border-gray-700 hover:border-white transition duration-200">
                     Log In
                 </a>
                 <a href="/signup" class="px-5 py-2.5 text-sm font-semibold rounded-full bg-hm-accent-blue hover:bg-hm-accent-blue/80 transition duration-200 shadow-lg shadow-hm-accent-blue/30">
@@ -124,7 +258,8 @@
                         Start Analysis
                     </a>
                     <button class="px-8 py-3 text-lg font-medium rounded-full bg-transparent border border-gray-700 text-gray-300 hover:border-white hover:text-white transition duration-300 flex items-center space-x-2">
-                        <span>Learn More</span>
+                        <!-- Added ID for text element to ensure color consistency in light mode -->
+                        <span id="learn-more-text">Learn More</span>
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                     </button>
                 </div>
