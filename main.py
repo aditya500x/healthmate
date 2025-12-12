@@ -33,12 +33,20 @@ def get_db():
         conn.close()
 
 def create_db_table():
-    """Creates the users and doctors tables if they don't exist."""
+    """
+    Creates the users and doctors tables.
+    The explicit DROP TABLE commands have been removed to ensure data persistence.
+    """
     print(f"Checking/Creating database file: {DATABASE_FILE}")
-    # FIX: Apply check_same_thread=False here too for initialization safety
     conn = sqlite3.connect(DATABASE_FILE, check_same_thread=False)
     try:
-        # 1. Users Table (Patients - Primary table for all registration data)
+        # --- DEVELOPMENT SCHEMA RESET START ---
+        # Dropping existing tables to apply new schema (role column)
+        # conn.execute("DROP TABLE IF EXISTS users") <-- REMOVED FOR PERSISTENCE
+        # conn.execute("DROP TABLE IF EXISTS doctors") <-- REMOVED FOR PERSISTENCE
+        # --- DEVELOPMENT SCHEMA RESET END ---
+
+        # 1. Users Table (Patients & Doctors - Single Source of Truth)
         conn.execute("""
             CREATE TABLE IF NOT EXISTS users (
                 id INTEGER PRIMARY KEY,
@@ -47,11 +55,11 @@ def create_db_table():
                 email TEXT UNIQUE NOT NULL,
                 phone TEXT,
                 password TEXT NOT NULL,
-                role TEXT NOT NULL DEFAULT 'user' 
+                role TEXT NOT NULL DEFAULT 'user'
             )
         """)
         
-        # 2. Doctors Table (Identical Schema as requested - currently unused for insertion)
+        # 2. Doctors Table (Created but unused for primary insertion, kept for potential future use)
         conn.execute("""
             CREATE TABLE IF NOT EXISTS doctors (
                 id INTEGER PRIMARY KEY,
@@ -69,11 +77,14 @@ def create_db_table():
         conn.close()
 
 def get_next_uid(db: sqlite3.Connection) -> int:
-    """Calculates the next sequential user ID (uid) starting from STARTING_UID."""
-    cursor = db.execute("SELECT MAX(uid) FROM users")
-    max_uid = cursor.fetchone()[0]
+    """Calculates the next sequential user ID (uid) based on the USERS table."""
+    # Query the USERS table for the max UID
+    cursor = db.execute("SELECT MAX(uid) FROM users").fetchone()
     
-    if max_uid is None:
+    # FIX: Ensure max_uid is treated as 0 if the query returns NULL (i.e., cursor[0] is None)
+    max_uid = cursor[0] if cursor and cursor[0] is not None else 0
+    
+    if max_uid < STARTING_UID:
         return STARTING_UID
     return max_uid + 1
 
@@ -121,12 +132,12 @@ async def login_user(
     db: sqlite3.Connection = Depends(get_db),
     email: str = Form(...),
     password: str = Form(...),
-    role: str = Form(...) # NEW: Capture the role submitted by the switch
+    role: str = Form(...) # Capture the role submitted by the switch
 ):
-    """Handles user login form submission, checking email, password, and matching role."""
+    """Handles user login, checking against the USERS table and verifying role."""
     
+    # Query the single USERS table
     cursor = db.execute(
-        # Check email and password against the primary users table
         "SELECT uid, password, name, role FROM users WHERE email = ?",
         (email,)
     )
@@ -134,13 +145,14 @@ async def login_user(
     
     # 1. Check if user exists and password is correct
     if user and verify_password(password, user['password']):
-        # 2. Check if the submitted role matches the role stored in the database
+        # 2. Check if the stored role matches the submitted role
         if user['role'] == role:
             print(f"User logged in: UID {user['uid']}, Role: {user['role']}")
-            # SUCCESS: Redirect with UID
-            return RedirectResponse(f"/dashboard?uid={user['uid']}", status_code=status.HTTP_303_SEE_OTHER)
+            
+            # SUCCESS: Redirect based on the role stored in the database
+            redirect_path = "/doctor_dashboard" if user['role'] == 'doctor' else "/dashboard"
+            return RedirectResponse(f"{redirect_path}?uid={user['uid']}", status_code=status.HTTP_303_SEE_OTHER)
         else:
-            # Role mismatch error (e.g., logging in as 'doctor' when registered as 'user')
             error_message = f"Role mismatch. Please confirm you are logging in as a {user['role']}."
             print(f"Login failed: Role mismatch for {email}. Stored role: {user['role']}, Submitted role: {role}")
     else:
@@ -162,7 +174,7 @@ async def signup_user(
     db: sqlite3.Connection = Depends(get_db),
 ):
     """
-    Handles user signup via JSON submission (Fetch API).
+    Handles user signup: inserts ALL data into the 'users' table.
     """
     
     try:
@@ -187,36 +199,39 @@ async def signup_user(
             status_code=status.HTTP_400_BAD_REQUEST
         )
     
-    # Simple role validation
+    # Role validation and table assignment (always 'users')
     if role not in ['user', 'doctor']:
         role = 'user'
+    
+    redirect_path = '/doctor_dashboard' if role == 'doctor' else '/dashboard'
+    table_name = 'users' # Always insert into 'users' table
 
     try:
         # 2. Hash the password securely
         password_hash = get_password_hash(password)
         
-        # 3. Get the next UID
+        # 3. Get the next unique UID 
         next_uid = get_next_uid(db) 
         
-        # INSERT statement still points to the primary 'users' table
+        # INSERT into the USERS table
         db.execute(
-            "INSERT INTO users (uid, name, email, phone, password, role) VALUES (?, ?, ?, ?, ?, ?)",
+            f"INSERT INTO {table_name} (uid, name, email, phone, password, role) VALUES (?, ?, ?, ?, ?, ?)",
             (next_uid, name, email, phone, password_hash, role)
         )
         db.commit()
         
         print(f"New user registered: UID {next_uid}, Email: {email}, Role: {role}")
         
-        # 4. SUCCESS: Return JSON with UID for client-side redirection
+        # 4. SUCCESS: Return JSON with correct UID and role-specific redirect path
         return JSONResponse(
-            {"message": "Registration successful. Redirecting...", "redirect_url": f"/dashboard?uid={next_uid}"},
+            {"message": "Registration successful. Redirecting...", "redirect_url": f"{redirect_path}?uid={next_uid}"},
             status_code=status.HTTP_201_CREATED
         )
 
     except sqlite3.IntegrityError:
-        # Specific handling for UNIQUE constraint violation on email
+        # This will fail if the email already exists in the USERS table.
         return JSONResponse(
-            {"message": "This email is already registered. Please login instead."},
+            {"message": "This email is already registered in the system. Please login instead."},
             status_code=status.HTTP_409_CONFLICT
         )
 
@@ -235,13 +250,13 @@ async def signup_user(
 async def read_dashboard(
     request: Request,
     db: sqlite3.Connection = Depends(get_db),
-    uid: int | None = None # Expect UID from query parameter (e.g., /dashboard?uid=10001)
+    uid: int | None = None
 ):
-    """The main application dashboard view. Fetches user name from DB using UID."""
+    """User/Patient Dashboard. Fetches user name from the USERS table."""
     
-    user_name = "Anonymous" # Default name is now Anonymous
+    user_name = "Anonymous"
     if uid:
-        # NOTE: Fetching from the primary 'users' table
+        # Query the single USERS table
         cursor = db.execute("SELECT name FROM users WHERE uid = ?", (uid,))
         user = cursor.fetchone()
         if user:
@@ -249,6 +264,26 @@ async def read_dashboard(
 
     context = get_template_context(request, user_name=user_name)
     return templates.TemplateResponse("dashboard.html", context)
+
+@app.get("/doctor_dashboard", response_class=HTMLResponse, tags=["Views"])
+async def read_doctor_dashboard(
+    request: Request,
+    db: sqlite3.Connection = Depends(get_db),
+    uid: int | None = None
+):
+    """Doctor/Provider Dashboard. Fetches name from the USERS table."""
+    
+    user_name = "Anonymous"
+    if uid:
+        # Query the single USERS table
+        cursor = db.execute("SELECT name FROM users WHERE uid = ?", (uid,))
+        user = cursor.fetchone()
+        if user:
+            user_name = user['name']
+
+    context = get_template_context(request, user_name=user_name)
+    return templates.TemplateResponse("doctor_dashboard.html", context)
+
 
 @app.get("/prescription", response_class=HTMLResponse, tags=["Views"])
 async def read_prescription_analysis(request: Request):
