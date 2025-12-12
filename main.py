@@ -80,12 +80,12 @@ templates = Jinja2Templates(directory="templates")
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # --- Utility Context for Templates ---
-MOCK_USER = "Dr. Healthmate" 
 
-def get_template_context(request: Request):
+# Updated: Changed default user_name from "Guest" to "Anonymous"
+def get_template_context(request: Request, user_name: str = "Anonymous"):
     """Returns the base context required by Jinja2 templates."""
     error = request.query_params.get("error")
-    return {"request": request, "user_name": MOCK_USER, "error": error}
+    return {"request": request, "user_name": user_name, "error": error}
 
 # --- Core Routes ---
 
@@ -117,7 +117,8 @@ async def login_user(
     
     if user and verify_password(password, user['password']):
         print(f"User logged in: UID {user['uid']}")
-        return RedirectResponse("/dashboard", status_code=status.HTTP_303_SEE_OTHER)
+        # SUCCESS: Redirect with UID in query string to fetch name on dashboard
+        return RedirectResponse(f"/dashboard?uid={user['uid']}", status_code=status.HTTP_303_SEE_OTHER)
     else:
         error_message = "Invalid email or password."
         return RedirectResponse(f"/login?error={error_message}", status_code=status.HTTP_303_SEE_OTHER)
@@ -136,7 +137,6 @@ async def signup_user(
 ):
     """
     Handles user signup via JSON submission (Fetch API).
-    Returns JSON response for client-side redirection.
     """
     
     try:
@@ -165,7 +165,7 @@ async def signup_user(
         password_hash = get_password_hash(password)
         
         # 3. Get the next UID
-        next_uid = get_next_uid(db)
+        next_uid = get_next_uid(db) 
         
         db.execute(
             "INSERT INTO users (uid, name, email, phone, password) VALUES (?, ?, ?, ?, ?)",
@@ -175,9 +175,9 @@ async def signup_user(
         
         print(f"New user registered: UID {next_uid}, Email: {email}")
         
-        # 4. SUCCESS: Return JSON for client-side redirection
+        # 4. SUCCESS: Return JSON with UID for client-side redirection
         return JSONResponse(
-            {"message": "Registration successful. Redirecting...", "redirect_url": "/dashboard"},
+            {"message": "Registration successful. Redirecting...", "redirect_url": f"/dashboard?uid={next_uid}"},
             status_code=status.HTTP_201_CREATED
         )
 
@@ -200,9 +200,21 @@ async def signup_user(
 # --- APPLICATION ROUTES (Restored) ---
 
 @app.get("/dashboard", response_class=HTMLResponse, tags=["Views"])
-async def read_dashboard(request: Request):
-    """The main application dashboard view."""
-    context = get_template_context(request)
+async def read_dashboard(
+    request: Request,
+    db: sqlite3.Connection = Depends(get_db),
+    uid: int | None = None # Expect UID from query parameter (e.g., /dashboard?uid=10001)
+):
+    """The main application dashboard view. Fetches user name from DB using UID."""
+    
+    user_name = "Anonymous" # Default name is now Anonymous
+    if uid:
+        cursor = db.execute("SELECT name FROM users WHERE uid = ?", (uid,))
+        user = cursor.fetchone()
+        if user:
+            user_name = user['name']
+
+    context = get_template_context(request, user_name=user_name)
     return templates.TemplateResponse("dashboard.html", context)
 
 @app.get("/prescription", response_class=HTMLResponse, tags=["Views"])
