@@ -47,12 +47,18 @@ async def read_signup(request: Request):
     context = get_template_context(request)
     return templates.TemplateResponse("signup.html", context)
 
-# Route for the Login Page
 @app.get("/login", response_class=HTMLResponse, tags=["Views"])
 async def read_login(request: Request):
     """User login page."""
     context = get_template_context(request)
     return templates.TemplateResponse("login.html", context)
+
+# Route for the Learn More Page
+@app.get("/learn", response_class=HTMLResponse, tags=["Views"])
+async def read_learn_more(request: Request):
+    """Learn More informational page."""
+    context = get_template_context(request)
+    return templates.TemplateResponse("learn.html", context)
 
 
 # If you run this file directly, it will start the Uvicorn server
@@ -63,5 +69,5 @@ if __name__ == "__main__":
         print("Created 'templates' directory. Please save HTML files there.")
         
     print("Starting HealthMate AI server on http://127.0.0.1:8000")
-    print("Visit http://127.0.0.1:8000/, http://127.0.0.1:8000/dashboard, http://127.0.0.1:8000/signup, and http://127.0.0.1:8000/login")
+    print("Visit http://127.0.0.1:8000/, http://127.0.0.1:8000/dashboard, http://127.0.0.1:8000/signup, http://127.0.0.1:8000/login, and http://127.0.0.1:8000/learn")
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
