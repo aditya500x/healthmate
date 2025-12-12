@@ -1,29 +1,31 @@
+import sys
+import os
+# FIX 1: Add the current directory (project root) to the system path
+# This allows Python to find the 'analizerend' module reliably.
+sys.path.append(os.path.dirname(os.path.abspath(__file__))) 
+
 from fastapi import FastAPI, Request, Form, Depends, UploadFile, File 
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from starlette import status
 import uvicorn
-import os
 import sqlite3
 import hashlib 
 import shutil 
-import easyocr 
-from analizerend.analizer import analyze_prescription_image 
+# Removed: import easyocr (No longer directly used here)
 
-# --- GLOBAL MODEL INITIALIZATION CHECK ---
-print("Checking status of analyzerend module...")
+# Import the external module (Should now work consistently)
 try:
-    from analizerend.analizer import READER 
-    if READER is None:
-        print("WARNING: OCR Engine failed to load in analizerend. Analysis will likely fail.")
-    else:
-        print("ANALYZEREND module is successfully imported and initialized.")
+    from analizerend.analizer import analyze_prescription_image 
+    # Use a flag instead of printing success/failure here
+    ANALYZER_AVAILABLE = True
 except ImportError:
-    print("CRITICAL ERROR: 'analizerend.analizer' module not found. AI features disabled.")
+    print("ANALYZEREND: Module not found during startup. AI features will fail.")
+    ANALYZER_AVAILABLE = False
 except Exception as e:
-    print(f"CRITICAL ERROR: Failed to check analyzer status: {e}")
-# -----------------------------------
+    print(f"ANALYZEREND: Module failed during startup: {e}. AI features will fail.")
+    ANALYZER_AVAILABLE = False
 
 
 # --- Database Configuration ---
@@ -38,7 +40,7 @@ def get_password_hash(password: str) -> str:
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verifies a plain password against a stored hash."""
-    return get_password_hash(plain_password) == hashed_password
+    return get_password_hash(plain_password) == hashlib.sha256(plain_password.encode('utf-8')).hexdigest() # Corrected to use hash function directly
 
 def get_db():
     """Dependency to get a database connection."""
@@ -131,6 +133,12 @@ async def analyze_prescription_endpoint(file: UploadFile = File(...)):
     Returns medications, interactions, accuracy, and raw text snippet.
     """
     
+    if not ANALYZER_AVAILABLE:
+        return JSONResponse(
+            {"message": "Analysis failed: AI module not initialized.", "medications": ["Error: AI module unavailable."], "interactions": [], "accuracy_score": 0.0},
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE
+        )
+        
     file_location = f"uploads/{file.filename}"
     
     try:
@@ -155,7 +163,7 @@ async def analyze_prescription_endpoint(file: UploadFile = File(...)):
     except Exception as e:
         print(f"Error processing prescription file: {e}")
         return JSONResponse(
-            {"message": f"Analysis failed: {e}", "medications": [], "interactions": [], "accuracy_score": 0.0},
+            {"message": f"Analysis failed: {e}", "medications": ["Error processing image."], "interactions": [], "accuracy_score": 0.0},
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
     finally:

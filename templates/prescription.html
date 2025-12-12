@@ -270,7 +270,10 @@
             const fileInput = document.getElementById('prescription-file');
 
             // FIX: Trigger the hidden file input when the drop area is clicked
-            dropArea.addEventListener('click', () => {
+            dropArea.addEventListener('click', (e) => {
+                // Prevent propagation if clicking an element inside that might already trigger it (e.g., text)
+                e.stopPropagation(); 
+                
                 // Only trigger the click if the submit button is not disabled
                 if (!document.getElementById('submit-analysis-btn').disabled) {
                     fileInput.click();
@@ -295,7 +298,14 @@
             dropArea.addEventListener('drop', handleDrop, false);
             
             // Handle file selection via hidden input (triggers analysis when file is selected)
-            fileInput.addEventListener('change', () => triggerAnalysis({ preventDefault: () => {} }), false);
+            // IMPORTANT: We use 'change' event here, which is triggered when the file is selected *and* the dialog closes.
+            fileInput.addEventListener('change', (e) => {
+                // Only handle the file if the input has files and we haven't processed it yet
+                if (e.target.files.length > 0) {
+                    // We don't call preventDefault here because we want the change event to run its course.
+                    triggerAnalysis({ preventDefault: () => {} });
+                }
+            }, false);
 
             function preventDefaults(e) {
                 e.preventDefault();
@@ -306,7 +316,9 @@
                 let dt = e.dataTransfer;
                 let files = dt.files;
                 if (files.length > 0) {
-                    handleFileUpload(files[0]);
+                    // Set files to the input element so triggerAnalysis can find them
+                    fileInput.files = files;
+                    triggerAnalysis({ preventDefault: () => {} });
                 }
             }
         }
@@ -383,7 +395,7 @@
                         <!-- Drag and Drop Area -->
                         <div id="drop-area" class="border-4 border-dashed border-purple-500/50 rounded-lg p-10 text-center transition duration-300 cursor-pointer">
                             <svg class="w-10 h-10 mx-auto mb-3 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 014 4v2m-5-4H9m6 4h-6"></path></svg>
-                            <p class="text-md font-medium text-white">Drag files here or <label for="prescription-file" class="text-purple-400 hover:text-purple-300 cursor-pointer">Click to Upload</label></p>
+                            <p class="text-md font-medium text-white">Drag files here or <span class="text-purple-400 hover:text-purple-300 cursor-pointer">Click to Upload</span></p>
                             <p class="text-xs text-gray-500 mt-1">PNG, JPG, or PDF (Max 10MB)</p>
                             <input type="file" id="prescription-file" accept="image/*,application/pdf" class="hidden">
                         </div>
